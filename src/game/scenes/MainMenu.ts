@@ -18,17 +18,14 @@ export default class MainMenu extends Phaser.Scene {
 
 	editorCreate(): void {
 
-		// background
-		this.add.image(512, 384, "background");
+		// background - adjusted for 384x288 resolution
+		this.add.image(192, 144, "background");
 
-		// logo
-		this.add.image(512, 384, "logo");
-
-		// text
-		const text = this.add.text(512, 460, "", {});
+		// text - adjusted position for smaller screen
+		const text = this.add.text(192, 144, "", {});
 		text.setOrigin(0.5, 0.5);
-		text.text = "Main Menu";
-		text.setStyle({ "align": "center", "color": "#ffffff", "fontFamily": "Arial Black", "fontSize": "38px", "stroke": "#000000", "strokeThickness":8});
+		text.text = "LOOP WARS\n\nPress ENTER to Play";
+		text.setStyle({ "align": "center", "color": "#ffffff", "fontFamily": "Arial Black", "fontSize": "24px", "stroke": "#000000", "strokeThickness":4});
 
 		this.events.emit("scene-awake");
 	}
@@ -39,14 +36,13 @@ export default class MainMenu extends Phaser.Scene {
 
     create ()
     {
-
-        this.input.once('pointerdown', () => {
-
-            this.scene.start('Game');
-
-        });
-
         this.editorCreate();
+
+        // Add Enter key to start the game
+        const enterKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        enterKey.on('down', () => {
+            this.scene.start('TrapHouse');
+        });
     }
     /* END-USER-CODE */
 }
