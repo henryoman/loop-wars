@@ -15,12 +15,12 @@ const config: Phaser.Types.Core.GameConfig = {
     pixelArt: true,
     roundPixels: true,
     zoom: 3,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            debug: false
-        }
-    },
+    		physics: {
+			default: 'arcade',
+			arcade: {
+				debug: true
+			}
+		},
     scene: [
         Boot,
         Preloader,

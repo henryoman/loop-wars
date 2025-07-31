@@ -64,6 +64,12 @@ export default class Preloader extends Phaser.Scene {
             frameWidth: 32, 
             frameHeight: 32 
         });
+        
+        // Load the tilemap JSON for collision data
+        this.load.json('homeInteriorMap', 'assets/tilemaps/player-home-interior.json');
+        
+        // Load the start screen background
+        this.load.image('startscreen', 'assets/startscreen.png');
     }
 
     create ()

@@ -4,6 +4,7 @@
 /* START OF COMPILED CODE */
 
 /* START-USER-IMPORTS */
+import Phaser from 'phaser';
 /* END-USER-IMPORTS */
 
 export default class TrapHouse extends Phaser.Scene {
@@ -21,8 +22,7 @@ export default class TrapHouse extends Phaser.Scene {
 		// background
 		this.add.image(192, 144, "traphouse");
 
-		// collider
-		this.physics.add.collider();
+		// Static colliders will be added in create() method
 
 		this.events.emit("scene-awake");
 	}
@@ -32,7 +32,7 @@ export default class TrapHouse extends Phaser.Scene {
 	// Write your code here
 	private player!: Phaser.Physics.Arcade.Sprite;
 	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-	private wasd!: { W: Phaser.Input.Keyboard.Key, A: Phaser.Input.Keyboard.Key, S: Phaser.Input.Keyboard.Key, D: Phaser.Input.Keyboard.Key };
+	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 
 	create() {
 
@@ -42,14 +42,13 @@ export default class TrapHouse extends Phaser.Scene {
 		this.player = this.physics.add.sprite(192, 144, 'player');
 		this.player.play('player-idle-down');
 
-		// Set up player physics body - bottom half of sprite (32x16)
-		this.player.setSize(32, 16); // Collision box size
-		this.player.setOffset(0, 16); // Offset to bottom half of 32x32 sprite
+		// Set up player physics body - 12x12 centered horizontally, bottom aligned
+		this.player.setSize(12, 12); // Collision box size
+		this.player.setOffset(10, 20); // Offset 10 pixels from left to center, 20 from top for bottom 12 pixels
 		this.player.setCollideWorldBounds(true);
 
 		// Set up input
 		this.cursors = this.input.keyboard!.createCursorKeys();
-		this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as { W: Phaser.Input.Keyboard.Key, A: Phaser.Input.Keyboard.Key, S: Phaser.Input.Keyboard.Key, D: Phaser.Input.Keyboard.Key };
 
 		// Set world bounds for physics and camera
 		this.physics.world.setBounds(0, 0, 384, 288);
@@ -57,6 +56,45 @@ export default class TrapHouse extends Phaser.Scene {
 		this.cameras.main.startFollow(this.player);
 		this.cameras.main.setLerp(0.1, 0.1);
 
+		// Create collision group for walls and obstacles
+		this.collisionGroup = this.physics.add.staticGroup();
+		
+		// Load tilemap data and create collision rectangles
+		this.createCollisionFromTilemap();
+
+		// Set up collision between player and collision group
+		this.physics.add.collider(this.player, this.collisionGroup);
+
+	}
+
+	private createCollisionFromTilemap() {
+		// Get the tilemap data
+		const mapData = this.cache.json.get('homeInteriorMap');
+		const tileSize = mapData.tileSize; // 16 pixels
+		
+		// Find the collision layer (Layer_1 with collider: true)
+		const collisionLayer = mapData.layers.find((layer: any) => layer.collider === true);
+		
+		if (collisionLayer) {
+			// Create invisible collision rectangles for each collision tile
+			collisionLayer.tiles.forEach((tile: any) => {
+				// Ensure pixel-perfect positioning - use Math.floor for exact integers
+				const x = Math.floor(tile.x * tileSize + (tileSize / 2)); // Center position
+				const y = Math.floor(tile.y * tileSize + (tileSize / 2)); // Center position
+				
+				// Create invisible collision rectangle
+				const collisionRect = this.add.rectangle(x, y, tileSize, tileSize, 0xff0000, 0);
+				collisionRect.setVisible(false); // Make invisible
+				
+				// Add physics body to the rectangle and ensure pixel alignment
+				this.physics.add.existing(collisionRect, true); // true = static body
+				if (collisionRect.body) {
+					// Ensure the physics body is also pixel-aligned
+					(collisionRect.body as Phaser.Physics.Arcade.StaticBody).setSize(tileSize, tileSize);
+				}
+				this.collisionGroup.add(collisionRect);
+			});
+		}
 	}
 
 	update() {
@@ -67,23 +105,23 @@ export default class TrapHouse extends Phaser.Scene {
 		let velocityY = 0;
 
 		// Handle movement input
-		if (this.cursors.left.isDown || this.wasd.A.isDown) {
+		if (this.cursors.left.isDown) {
 			velocityX = -speed;
 			this.player.setFlipX(false);
 			direction = 'side';
 			moving = true;
-		} else if (this.cursors.right.isDown || this.wasd.D.isDown) {
+		} else if (this.cursors.right.isDown) {
 			velocityX = speed;
 			this.player.setFlipX(true);
 			direction = 'side';
 			moving = true;
 		}
 
-		if (this.cursors.up.isDown || this.wasd.W.isDown) {
+		if (this.cursors.up.isDown) {
 			velocityY = -speed;
 			direction = 'up';
 			moving = true;
-		} else if (this.cursors.down.isDown || this.wasd.S.isDown) {
+		} else if (this.cursors.down.isDown) {
 			velocityY = speed;
 			direction = 'down';
 			moving = true;
@@ -91,6 +129,11 @@ export default class TrapHouse extends Phaser.Scene {
 
 		// Set velocity for physics movement
 		this.player.setVelocity(velocityX, velocityY);
+
+		// Debug log when moving
+		if (moving) {
+			console.log(`Moving: ${direction}, Velocity: ${velocityX}, ${velocityY}, Position: ${this.player.x}, ${this.player.y}`);
+		}
 
 		// Play appropriate animation
 		if (moving) {

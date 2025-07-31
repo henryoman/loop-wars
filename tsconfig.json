@@ -1,29 +1,50 @@
 {
     "compilerOptions": {
-        "target": "ES2020",
+        // Target modern JavaScript - Phaser 3.90+ supports ES2022
+        "target": "ES2022",
         "useDefineForClassFields": true,
         "module": "ESNext",
         "lib": [
-            "ES2020",
+            "ES2022",
             "DOM",
             "DOM.Iterable"
         ],
-        "skipLibCheck": true,
-        /* Bundler mode */
+        
+        // Module resolution optimized for modern bundlers (Vite, etc.)
         "moduleResolution": "bundler",
-        "allowImportingTsExtensions": true,
+        "allowImportingTsExtensions": false,
         "isolatedModules": true,
         "moduleDetection": "force",
         "noEmit": true,
-        /* Linting */
-        "strictPropertyInitialization": false,
+        
+        // Essential for Phaser 3 compatibility
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "allowJs": true,
+        
+        // Type checking - strict but game-dev friendly
         "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "strictPropertyInitialization": false,
+        
+        // Reasonable strictness for game development
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
-        "noUncheckedSideEffectImports": true
+        "noImplicitReturns": false,
+        
+        // For better development experience
+        "noUncheckedSideEffectImports": false
     },
     "include": [
-        "src"
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "**/*.spec.ts",
+        "**/*.test.ts"
     ]
 }
