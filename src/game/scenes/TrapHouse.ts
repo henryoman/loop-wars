@@ -1,45 +1,21 @@
-
-// You can write more code here
-
-/* START OF COMPILED CODE */
-
-/* START-USER-IMPORTS */
 import Phaser from 'phaser';
-/* END-USER-IMPORTS */
 
 export default class TrapHouse extends Phaser.Scene {
 
 	constructor() {
 		super("TrapHouse");
-
-		/* START-USER-CTR-CODE */
-		// Write your code here.
-		/* END-USER-CTR-CODE */
 	}
 
-	editorCreate(): void {
-
-		// background
-		this.add.image(192, 144, "traphouse");
-
-		// Static colliders will be added in create() method
-
-		this.events.emit("scene-awake");
-	}
-
-	/* START-USER-CODE */
-
-	// Write your code here
 	private player!: Phaser.Physics.Arcade.Sprite;
 	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 
 	create() {
-
-		this.editorCreate();
+		// Background image
+		this.add.image(192, 144, "traphouse");
 
 		// Create the player physics sprite at center of screen
-		this.player = this.physics.add.sprite(192, 144, 'player');
+		this.player = this.physics.add.sprite(192, 144, 'loop-player');
 		this.player.play('player-idle-down');
 
 		// Set up player physics body - 12x12 centered horizontally, bottom aligned
@@ -142,10 +118,4 @@ export default class TrapHouse extends Phaser.Scene {
 			this.player.play(`player-idle-${direction}`, true);
 		}
 	}
-
-	/* END-USER-CODE */
 }
-
-/* END OF COMPILED CODE */
-
-// You can write more code here

@@ -2,12 +2,7 @@
     "section1": {
         "files": [
             {
-                "url": "assets/logo.png",
-                "type": "image",
-                "key": "logo"
-            },
-            {
-                "url": "assets/loop-player.png",
+                "url": "assets/images/loop-player.png",
                 "frameConfig": {
                     "frameWidth": 32,
                     "frameHeight": 32,
@@ -20,18 +15,10 @@
                 "key": "loop-player"
             },
             {
-                "url": "assets/traphousebig.png",
+                "url": "assets/images/levels/traphouse/traphousebig.png",
                 "type": "image",
                 "key": "traphouse"
             }
         ]
-    },
-    "meta": {
-        "app": "Phaser Editor 2D - Asset Pack Editor",
-        "contentType": "phasereditor2d.pack.core.AssetContentType",
-        "url": "https://phasereditor2d.com",
-        "version": 2,
-        "showAllFilesInBlocks": false,
-        "visible": true
     }
 }

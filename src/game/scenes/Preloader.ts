@@ -1,49 +1,24 @@
-// You can write more code here
-
-/* START OF COMPILED CODE */
-
 import Phaser from "phaser";
-/* START-USER-IMPORTS */
-/* END-USER-IMPORTS */
 
 export default class Preloader extends Phaser.Scene {
 
 	constructor() {
 		super("Preloader");
-
-		/* START-USER-CTR-CODE */
-		// Write your code here.
-		/* END-USER-CTR-CODE */
 	}
 
-	editorCreate(): void {
-
-		// image_56ba42f5-7d7b-4134-a21e-85c51411440a
-		this.add.image(512, 384, "background");
-
-		// progressBar
-		const progressBar = this.add.rectangle(512, 384, 468, 32);
-		progressBar.isFilled = true;
-		progressBar.fillColor = 14737632;
-		progressBar.isStroked = true;
-
-		this.progressBar = progressBar;
-
-		this.events.emit("scene-awake");
-	}
-
-	private progressBar!: Phaser.GameObjects.Rectangle;
-
-	/* START-USER-CODE */
-
-	// Write your code here
     init ()
     {
+        // Background image
+        this.add.image(512, 384, "background");
 
-		this.editorCreate();
+        // Progress bar background
+        const progressBar = this.add.rectangle(512, 384, 468, 32);
+        progressBar.isFilled = true;
+        progressBar.fillColor = 14737632;
+        progressBar.isStroked = true;
 
         //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-        const bar = this.add.rectangle(this.progressBar.x - this.progressBar.width / 2 + 4, this.progressBar.y, 4, 28, 0xffffff)
+        const bar = this.add.rectangle(progressBar.x - progressBar.width / 2 + 4, progressBar.y, 4, 28, 0xffffff)
 
         //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
         this.load.on('progress', (progress: number) => {
@@ -59,17 +34,13 @@ export default class Preloader extends Phaser.Scene {
         // Use the 'pack' file to load in any assets you need for this scene
         this.load.pack('preload', 'assets/preload-asset-pack.json');
         
-        // Load the player sprite sheet (3x3 grid)
-        this.load.spritesheet('player', 'assets/loop-player.png', { 
-            frameWidth: 32, 
-            frameHeight: 32 
-        });
+        // Player spritesheet is loaded via the asset pack as 'loop-player'
         
         // Load the tilemap JSON for collision data
         this.load.json('homeInteriorMap', 'assets/tilemaps/player-home-interior.json');
         
         // Load the start screen background
-        this.load.image('startscreen', 'assets/startscreen.png');
+        this.load.image('startscreen', 'assets/images/screens/startscreen.png');
     }
 
     create ()
@@ -80,39 +51,39 @@ export default class Preloader extends Phaser.Scene {
         // Create player animations based on 3x3 sprite sheet
         this.anims.create({
             key: 'player-idle-down',
-            frames: [{ key: 'player', frame: 1 }],
+            frames: [{ key: 'loop-player', frame: 1 }],
             frameRate: 1
         });
         
         this.anims.create({
             key: 'player-walk-down',
-            frames: [{ key: 'player', frame: 0 }, { key: 'player', frame: 1 }, { key: 'player', frame: 2 }, { key: 'player', frame: 1 }],
+            frames: [{ key: 'loop-player', frame: 0 }, { key: 'loop-player', frame: 1 }, { key: 'loop-player', frame: 2 }, { key: 'loop-player', frame: 1 }],
             frameRate: 8,
             repeat: -1
         });
         
         this.anims.create({
             key: 'player-idle-side',
-            frames: [{ key: 'player', frame: 4 }],
+            frames: [{ key: 'loop-player', frame: 4 }],
             frameRate: 1
         });
         
         this.anims.create({
             key: 'player-walk-side',
-            frames: [{ key: 'player', frame: 3 }, { key: 'player', frame: 4 }, { key: 'player', frame: 5 }, { key: 'player', frame: 4 }],
+            frames: [{ key: 'loop-player', frame: 3 }, { key: 'loop-player', frame: 4 }, { key: 'loop-player', frame: 5 }, { key: 'loop-player', frame: 4 }],
             frameRate: 8,
             repeat: -1
         });
         
         this.anims.create({
             key: 'player-idle-up',
-            frames: [{ key: 'player', frame: 7 }],
+            frames: [{ key: 'loop-player', frame: 7 }],
             frameRate: 1
         });
         
         this.anims.create({
             key: 'player-walk-up',
-            frames: [{ key: 'player', frame: 6 }, { key: 'player', frame: 7 }, { key: 'player', frame: 8 }, { key: 'player', frame: 7 }],
+            frames: [{ key: 'loop-player', frame: 6 }, { key: 'loop-player', frame: 7 }, { key: 'loop-player', frame: 8 }, { key: 'loop-player', frame: 7 }],
             frameRate: 8,
             repeat: -1
         });
@@ -120,9 +91,4 @@ export default class Preloader extends Phaser.Scene {
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         this.scene.start('MainMenu');
     }
-    /* END-USER-CODE */
 }
-
-/* END OF COMPILED CODE */
-
-// You can write more code here
