@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { PlayerController } from '../player/PlayerController';
+import { IPlayerMovementInput } from '../player/types/PlayerTypes';
 
 export default class TrapHouse extends Phaser.Scene {
 
@@ -9,6 +11,7 @@ export default class TrapHouse extends Phaser.Scene {
 	private player!: Phaser.Physics.Arcade.Sprite;
 	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
+	private playerController!: PlayerController;
 
 	create() {
 		// Background image
@@ -40,6 +43,9 @@ export default class TrapHouse extends Phaser.Scene {
 
 		// Set up collision between player and collision group
 		this.physics.add.collider(this.player, this.collisionGroup);
+
+		// Initialize player controller
+		this.playerController = new PlayerController(this.player);
 
 	}
 
@@ -74,48 +80,22 @@ export default class TrapHouse extends Phaser.Scene {
 	}
 
 	update() {
-		const speed = 80; // pixels per second
-		let moving = false;
-		let direction = 'down';
-		let velocityX = 0;
-		let velocityY = 0;
+		// Create input object from cursors
+		const input: IPlayerMovementInput = {
+			up: this.cursors.up.isDown,
+			down: this.cursors.down.isDown,
+			left: this.cursors.left.isDown,
+			right: this.cursors.right.isDown
+		};
 
-		// Handle movement input
-		if (this.cursors.left.isDown) {
-			velocityX = -speed;
-			this.player.setFlipX(false);
-			direction = 'side';
-			moving = true;
-		} else if (this.cursors.right.isDown) {
-			velocityX = speed;
-			this.player.setFlipX(true);
-			direction = 'side';
-			moving = true;
-		}
+		// Update player via controller
+		this.playerController.update(input);
 
-		if (this.cursors.up.isDown) {
-			velocityY = -speed;
-			direction = 'up';
-			moving = true;
-		} else if (this.cursors.down.isDown) {
-			velocityY = speed;
-			direction = 'down';
-			moving = true;
-		}
-
-		// Set velocity for physics movement
-		this.player.setVelocity(velocityX, velocityY);
-
-		// Debug log when moving
-		if (moving) {
-			console.log(`Moving: ${direction}, Velocity: ${velocityX}, ${velocityY}, Position: ${this.player.x}, ${this.player.y}`);
-		}
-
-		// Play appropriate animation
-		if (moving) {
-			this.player.play(`player-walk-${direction}`, true);
-		} else {
-			this.player.play(`player-idle-${direction}`, true);
+		// Debug log when moving (maintain existing debug behavior)
+		const playerState = this.playerController.getState();
+		if (playerState.currentState === 'walking') {
+			const sprite = this.playerController.getSprite();
+			console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
 		}
 	}
 }
