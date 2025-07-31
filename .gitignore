@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+scripts/README.md
+scripts/WORKFLOW.md
+LoopWars-SceneandCharacterDocumentation.md
+

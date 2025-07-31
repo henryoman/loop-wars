@@ -1,89 +1,120 @@
-# Phaser Editor Bun Template
+# Loop Wars
 
-This is a Phaser Editor v4 project template that uses Bun for bundling. It supports hot-reloading for quick development workflow and includes scripts to generate production-ready builds.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Phaser 3.85.0](https://img.shields.io/badge/Phaser-3.85.0-orange?logo=phaser)](https://phaser.io/)
+[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![GMTK Jam 2025](https://img.shields.io/badge/GMTK%20Jam%202025-Loop-brightgreen?style=flat&logo=itch.io)](https://itch.io/jam/gmtk-2025)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![Last Commit](https://img.shields.io/github/last-commit/yourusername/loop-wars)](https://github.com/yourusername/loop-wars)
 
-### Versions
+A pixel-perfect action game built with modern web technologies. Loop Wars delivers precise movement mechanics and engaging gameplay in a retro-inspired package.
 
-This template has been updated for:
+![Loop Wars Start Screen](public/assets/images/screens/startscreen.png)
 
-- [Phaser 3.88.2](https://github.com/phaserjs/phaser)
-- Phaser Editor v4.0 and above
+## Overview
 
-![screenshot](screenshot.png)
+Loop Wars is a top-down action game featuring:
 
-## What is Phaser Editor?
+- **Pixel-perfect graphics** rendered at native 384x288 resolution with 3x scaling
+- **Responsive controls** with directional movement and facing mechanics
+- **Custom physics system** optimized for arcade-style gameplay
+- **Modular architecture** built with TypeScript and component-based design
 
-Phaser Editor enables you to visually create Phaser games. Instead of entering numbers in your code to position Game Objects, you can drag and drop them into place, tweak their animations, adjust their physics bodies, enable special effects, and more. It's quicker and faster for both artists and developers alike and publishes pure Phaser code.
+## Technical Specifications
 
-See more at [phaser.io](https://phaser.io/editor)
+**Engine:** Phaser 3.85.0  
+**Runtime:** Bun  
+**Language:** TypeScript  
+**Resolution:** 384x288 (3x scaled to 1152x864)  
+**Physics:** Arcade Physics with custom collision system  
 
-## Requirements
+## Development
 
-[Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
+### Prerequisites
 
-An active subscription to Phaser Editor is required to load and use this template within it.
+- [Bun](https://bun.sh) (latest version)
+- Modern web browser with WebGL support
 
-## Available Commands
+### Installation
 
-| Command | Description |
-|---------|-------------|
-| `npm install` | Install project dependencies |
-| `npm run dev` | Launch a development web server |
-| `npm run build` | Create a production build in the `dist` folder |
+```bash
+git clone <repository-url>
+cd loop-wars
+bun install
+```
 
-## Writing Code
+### Development Server
 
-After cloning the repo, run `npm install` from your project directory.
+```bash
+bun run dev
+```
 
-To start the local development server use `npm run dev`.
+The development server supports hot reloading and runs on `http://localhost:3000`.
 
-## Deploying to Production
+### Production Build
 
-To create a production build use the command `npm run build`.
+```bash
+bun run build
+```
 
-This will take your game code and build it into a single bundle, ready for deployment. This bundle is saved to the `dist` folder. Please note that some templates save to the `build` folder instead. The deployment script will also copy any assets your project imported, or stored in the public assets folder.
+Builds are optimized for production and output to the `dist` directory.
 
-To deploy your game, upload *all* of the contents of the `dist` folder to a public-facing web server.
+## Architecture
 
-**Note:** In some templates, the `dist` folder has been renamed to `build` to remain within that framework's conventions.
+### Core Systems
 
-## Phaser Editor considerations
+**Player Controller:** Modular player movement with state management and directional facing  
+**Collision System:** Custom tile-based collision detection with sub-pixel precision  
+**Asset Pipeline:** Streamlined asset loading with automatic sprite sheet processing  
+**Scene Management:** Component-based scene architecture for maintainable game flow  
 
-### Excluding files from the project
+### Performance Optimizations
 
-You don't want to add every file in this template to your Phaser Editor project. For example, the whole of `node_modules` can be excluded.
+- Object pooling for dynamic entities
+- Efficient collision detection with spatial partitioning  
+- Asset compression and lazy loading
+- Canvas renderer optimization for consistent performance
 
-The `/.skip` file lists the folders and files to exclude from the editor's project.
+## Asset Workflow
 
-[Learn more about resource filtering in Phaser Editor](https://phaser.io/editor/docs/misc/resources-filtering)
+The game includes a sophisticated asset pipeline supporting both manual and automated workflows:
 
-### Asset Pack
+### Collision Data Export
 
-Phaser has the ability to load what are known as 'asset packs'. These are JSON files that describe all of the content that your game needs to load, such as images, audio, and fonts. Phaser Editor will generate and use asset packs intensively and tools such as the Scene Editor depend upon the information stored in the asset pack files.
+```bash
+# Export collision data from Aseprite files
+bun run export:collision filename.aseprite
+bun run export:collision:all
+```
 
-You can have multiple asset packs per project, which is the recommended practice for larger games, allowing you to load only the pack of assets the game requires at that specific point.
+### Asset Organization
 
-In this template, we have pre-configured two types of asset packs: `boot-asset-pack.json` and `preload-asset-pack.json`.
+```
+public/assets/
+├── images/           # Game visuals
+│   ├── levels/       # Level backgrounds  
+│   ├── sprites/      # Character sprites
+│   └── ui/           # Interface elements
+├── collision/        # Generated collision data
+└── aseprite/         # Source art files
+```
 
-The `boot-asset-pack.json` file is used to load assets when the game first boots. Typically, you would store a small selection of initial assets in here, such as a loading screen image and progress bar.
+## Code Quality
 
-The `preload-asset-pack.json` in this template contains the rest of the assets the game needs. You are free to create additional packs as required, but for the sake of simplicity, this template has been configured with just these two packs.
+The codebase maintains strict TypeScript standards with:
 
-[Learn more about Asset Pack loading in Phaser](https://newdocs.phaser.io/docs/3.80.0/Phaser.Loader.LoaderPlugin#pack)
+- **Type safety:** Full TypeScript coverage with strict compilation
+- **Modular design:** Component-based architecture for maintainability  
+- **Performance focus:** Optimized update loops and memory management
+- **Clean separation:** Game logic isolated from rendering and input systems
 
-## Join the Phaser Community!
+## Browser Compatibility
 
-We love to see what developers like you create with Phaser! It really motivates us to keep improving. So please join our community and show off your work 😄
+**Recommended:** Chrome, Firefox, Safari (latest versions)  
+**Minimum:** Any browser with WebGL 1.0 support  
+**Mobile:** Touch controls supported on mobile devices
 
-**Visit:** The [Phaser website](https://phaser.io) and follow on [Phaser Twitter](https://twitter.com/phaser_)<br />
-**Play:** Some of the amazing games [#madewithphaser](https://twitter.com/search?q=%23madewithphaser&src=typed_query&f=live)<br />
-**Learn:** [API Docs](https://newdocs.phaser.io), [Support Forum](https://phaser.discourse.group/) and [StackOverflow](https://stackoverflow.com/questions/tagged/phaser-framework)<br />
-**Discord:** Join us on [Discord](https://discord.gg/phaser)<br />
-**Code:** 2000+ [Examples](https://labs.phaser.io)<br />
-**Read:** The [Phaser World](https://phaser.io/community/newsletter) Newsletter<br />
+## License
 
-Created by [Phaser Studio](mailto:support@phaser.io). Powered by coffee, anime, pixels and love.
-
-The Phaser logo and characters are &copy; 2011 - 2025 Phaser Studio Inc.
-
-All rights reserved.
+MIT License - see LICENSE file for details.
