@@ -18,6 +18,11 @@
                 "url": "assets/images/levels/traphouse/traphousebig.png",
                 "type": "image",
                 "key": "traphouse"
+            },
+            {
+                "url": "assets/images/levels/studio-interior.png",
+                "type": "image",
+                "key": "studio-interior"
             }
         ]
     }

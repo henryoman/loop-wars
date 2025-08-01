@@ -2,6 +2,7 @@ import Boot from './scenes/Boot';
 import MainMenu from './scenes/MainMenu';
 import Phaser from 'phaser';
 import Preloader from './scenes/Preloader';
+import StudioInterior from './scenes/StudioInterior';
 import TrapHouse from './scenes/TrapHouse';
 
 // Find out more information about the Game Config at:
@@ -25,6 +26,7 @@ const config: Phaser.Types.Core.GameConfig = {
         Boot,
         Preloader,
         MainMenu,
+        StudioInterior,
         TrapHouse
     ]
 };

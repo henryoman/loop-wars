@@ -27,8 +27,9 @@ function exportCollisionFromAseprite(asepriteFile) {
     try {
         console.log(`🎨 Exporting collision from: ${fileName}.aseprite`);
         
-        // Run Aseprite with our collision export script
-        const command = `aseprite -b "${asepriteFile}" --script "${SCRIPT_PATH}"`;
+        // Run Aseprite with our collision export script (macOS path)
+        const asepriteCommand = '/Applications/Aseprite.app/Contents/MacOS/aseprite';
+        const command = `"${asepriteCommand}" -b "${asepriteFile}" --script "${SCRIPT_PATH}"`;
         
         execSync(command, { 
             stdio: 'pipe',
@@ -56,11 +57,12 @@ function main() {
     console.log('=====================================');
     
     // Check if Aseprite is available
+    const asepriteCommand = '/Applications/Aseprite.app/Contents/MacOS/aseprite';
     try {
-        execSync('aseprite --version', { stdio: 'pipe' });
+        execSync(`"${asepriteCommand}" --version`, { stdio: 'pipe' });
     } catch (error) {
-        console.error('❌ Aseprite not found in PATH');
-        console.error('Please install Aseprite and ensure it\\'s accessible from command line');
+        console.error('❌ Aseprite not found at expected macOS location');
+        console.error('Please ensure Aseprite is installed at /Applications/Aseprite.app/');
         process.exit(1);
     }
     

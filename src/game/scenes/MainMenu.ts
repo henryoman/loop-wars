@@ -16,13 +16,13 @@ export default class MainMenu extends Phaser.Scene {
         const spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         
         enterKey.on('down', () => {
-            console.log('Enter key pressed - starting TrapHouse scene');
-            this.scene.start('TrapHouse');
+            console.log('Enter key pressed - starting StudioInterior scene');
+            this.scene.start('StudioInterior');
         });
         
         spaceKey.on('down', () => {
-            console.log('Space key pressed - starting TrapHouse scene');
-            this.scene.start('TrapHouse');
+            console.log('Space key pressed - starting StudioInterior scene');
+            this.scene.start('StudioInterior');
         });
     }
 }
