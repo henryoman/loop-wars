@@ -2,10 +2,10 @@ import Phaser from 'phaser';
 import { PlayerController } from '../player/PlayerController';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
 
-export default class StudioInterior extends Phaser.Scene {
+export default class PaccHouse extends Phaser.Scene {
 
 	constructor() {
-		super("StudioInterior");
+		super("pacc-house");
 	}
 
 	private player!: Phaser.Physics.Arcade.Sprite;
@@ -14,13 +14,13 @@ export default class StudioInterior extends Phaser.Scene {
 	private playerController!: PlayerController;
 
 	preload() {
-		// Load the collision data JSON for this scene
-		this.load.json('studioInteriorMap', 'assets/collision/studio-interior.json');
+		// Load the collision PNG as a sprite for pixel-perfect detection
+		this.load.image('paccHouseCollision', 'assets/images/levels/pacc-house-interior-collision.png');
 	}
 
 	create() {
 		// Background image
-		this.add.image(192, 144, "studio-interior");
+		this.add.image(192, 144, "pacc-house-interior");
 
 		// Create the player physics sprite at center of screen
 		this.player = this.physics.add.sprite(192, 144, 'loop-player');
@@ -40,48 +40,32 @@ export default class StudioInterior extends Phaser.Scene {
 		this.cameras.main.startFollow(this.player);
 		this.cameras.main.setLerp(0.1, 0.1);
 
-		// Create collision group for walls and obstacles
+		// Create pixel-perfect collision group
 		this.collisionGroup = this.physics.add.staticGroup();
-		
-		// Load tilemap data and create collision rectangles
-		this.createCollisionFromTilemap();
-
-		// Set up collision between player and collision group
-		this.physics.add.collider(this.player, this.collisionGroup);
+		this.setupPixelPerfectCollision();
 
 		// Initialize player controller
 		this.playerController = new PlayerController(this.player);
 
 	}
 
-	private createCollisionFromTilemap() {
-		// Get the tilemap data
-		const mapData = this.cache.json.get('studioInteriorMap');
-		const tileSize = mapData.tileSize; // 16 pixels
+	private setupPixelPerfectCollision() {
+		// Create invisible collision sprite with pixel-perfect hit area
+		const collisionImg = this.add.image(0, 0, 'paccHouseCollision');
+		collisionImg.setOrigin(0, 0);
+		collisionImg.setVisible(false);
 		
-		// Find the collision layer (Layer_1 with collider: true)
-		const collisionLayer = mapData.layers.find((layer: any) => layer.collider === true);
+		// Enable input with pixel-perfect detection
+		collisionImg.setInteractive(this.input.makePixelPerfect(1));
 		
-		if (collisionLayer) {
-			// Create invisible collision rectangles for each collision tile
-			collisionLayer.tiles.forEach((tile: any) => {
-				// Ensure pixel-perfect positioning - use Math.floor for exact integers
-				const x = Math.floor(tile.x * tileSize + (tileSize / 2)); // Center position
-				const y = Math.floor(tile.y * tileSize + (tileSize / 2)); // Center position
-				
-				// Create invisible collision rectangle
-				const collisionRect = this.add.rectangle(x, y, tileSize, tileSize, 0xff0000, 0);
-				collisionRect.setVisible(false); // Make invisible
-				
-				// Add physics body to the rectangle and ensure pixel alignment
-				this.physics.add.existing(collisionRect, true); // true = static body
-				if (collisionRect.body) {
-					// Ensure the physics body is also pixel-aligned
-					(collisionRect.body as Phaser.Physics.Arcade.StaticBody).setSize(tileSize, tileSize);
-				}
-				this.collisionGroup.add(collisionRect);
-			});
-		}
+		// Add physics body
+		this.physics.add.existing(collisionImg, true);
+		this.collisionGroup.add(collisionImg);
+		
+		// Set up collision between player and collision group
+		this.physics.add.collider(this.player, this.collisionGroup);
+		
+		console.log('✅ Pixel-perfect collision system enabled using Phaser makePixelPerfect()');
 	}
 
 	update() {

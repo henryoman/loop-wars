@@ -23,6 +23,16 @@
                 "url": "assets/images/levels/studio-interior.png",
                 "type": "image",
                 "key": "studio-interior"
+            },
+            {
+                "url": "assets/images/levels/pacc-house-interior.png",
+                "type": "image",
+                "key": "pacc-house-interior"
+            },
+            {
+                "url": "assets/images/levels/apartment-interior.png",
+                "type": "image",
+                "key": "apartment-interior"
             }
         ]
     }

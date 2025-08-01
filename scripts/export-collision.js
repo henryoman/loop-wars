@@ -7,7 +7,7 @@
  * Completely isolated from game logic - safe to run
  */
 
-import { execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import { existsSync, mkdirSync, readdirSync } from 'fs';
 import path from 'path';
 
@@ -29,12 +29,27 @@ function exportCollisionFromAseprite(asepriteFile) {
         
         // Run Aseprite with our collision export script (macOS path)
         const asepriteCommand = '/Applications/Aseprite.app/Contents/MacOS/aseprite';
-        const command = `"${asepriteCommand}" -b "${asepriteFile}" --script "${SCRIPT_PATH}"`;
+        // Use array format to avoid shell interpretation issues with $ in filenames
+        const args = ['-b', asepriteFile, '--script', SCRIPT_PATH];
         
-        execSync(command, { 
-            stdio: 'pipe',
-            cwd: process.cwd()
+        const result = spawnSync(asepriteCommand, args, { 
+            cwd: process.cwd(),
+            encoding: 'utf8'
         });
+        
+        // Log any output from Aseprite/Lua script
+        if (result.stdout && result.stdout.trim()) {
+            console.log(`   ${result.stdout.trim()}`);
+        }
+        if (result.stderr && result.stderr.trim()) {
+            console.error(`   stderr: ${result.stderr.trim()}`);
+        }
+        
+        // Check for spawn errors
+        if (result.error) {
+            console.error(`❌ Error running Aseprite: ${result.error.message}`);
+            return false;
+        }
         
         // Check if output file was created
         const outputFile = path.join(COLLISION_OUTPUT_PATH, `${fileName}.json`);
