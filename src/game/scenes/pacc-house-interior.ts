@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { PlayerController } from '../player/PlayerController';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
+import { CollisionLoader } from '../utils/CollisionLoader';
 
 export default class PaccHouse extends Phaser.Scene {
 
@@ -12,10 +13,22 @@ export default class PaccHouse extends Phaser.Scene {
 	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 	private playerController!: PlayerController;
+	private collisionLoader!: CollisionLoader;
+	private collisionRects: Phaser.GameObjects.Rectangle[] = [];
 
 	preload() {
-		// Load the collision PNG as a sprite for pixel-perfect detection
-		this.load.image('paccHouseCollision', 'assets/images/levels/pacc-house-interior-collision.png');
+		// Initialize collision loader
+		this.collisionLoader = new CollisionLoader(this);
+		
+		// Load slice collision data from pacc-house-interior.json
+		this.collisionLoader.loadSliceCollision('paccHouseCollision', 'assets/images/levels/pacc-house-interior.json');
+		
+		// Handle load errors gracefully
+		this.load.on('loaderror', (file: any) => {
+			if (file.key === 'paccHouseCollision') {
+				console.warn('Collision data not found for PaccHouse - no collision will be active');
+			}
+		});
 	}
 
 	create() {
@@ -40,32 +53,25 @@ export default class PaccHouse extends Phaser.Scene {
 		this.cameras.main.startFollow(this.player);
 		this.cameras.main.setLerp(0.1, 0.1);
 
-		// Create pixel-perfect collision group
+		// Create slice-based collision system
 		this.collisionGroup = this.physics.add.staticGroup();
-		this.setupPixelPerfectCollision();
+		this.setupSliceCollision();
 
 		// Initialize player controller
 		this.playerController = new PlayerController(this.player);
-
 	}
 
-	private setupPixelPerfectCollision() {
-		// Create invisible collision sprite with pixel-perfect hit area
-		const collisionImg = this.add.image(0, 0, 'paccHouseCollision');
-		collisionImg.setOrigin(0, 0);
-		collisionImg.setVisible(false);
+	private setupSliceCollision() {
+		// Create collision bodies from Aseprite slice data
+		this.collisionRects = this.collisionLoader.createSliceCollision('paccHouseCollision', this.collisionGroup);
 		
-		// Enable input with pixel-perfect detection
-		collisionImg.setInteractive(this.input.makePixelPerfect(1));
+		// Setup player collision with the collision group
+		this.collisionLoader.setupPlayerCollision(this.player, this.collisionGroup);
 		
-		// Add physics body
-		this.physics.add.existing(collisionImg, true);
-		this.collisionGroup.add(collisionImg);
+		// Uncomment below to enable debug visualization (red rectangles)
+		// this.collisionLoader.enableDebugVisualization(this.collisionRects);
 		
-		// Set up collision between player and collision group
-		this.physics.add.collider(this.player, this.collisionGroup);
-		
-		console.log('✅ Pixel-perfect collision system enabled using Phaser makePixelPerfect()');
+		console.log('✅ Slice-based collision system enabled for PaccHouse');
 	}
 
 	update() {

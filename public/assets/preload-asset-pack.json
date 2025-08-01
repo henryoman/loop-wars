@@ -33,6 +33,11 @@
                 "url": "assets/images/levels/apartment-interior.png",
                 "type": "image",
                 "key": "apartment-interior"
+            },
+            {
+                "url": "assets/images/levels/apartment-interior2.png",
+                "type": "image",
+                "key": "apartment-interior2"
             }
         ]
     }

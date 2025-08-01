@@ -1,0 +1,31 @@
+{ "frames": [
+   {
+    "filename": "apartment-interior-test.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 384, "h": 288 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 384, "h": 288 },
+    "sourceSize": { "w": 384, "h": 288 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.14.2-arm64",
+  "format": "RGBA8888",
+  "size": { "w": 384, "h": 288 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "collision", "opacity": 82, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "Slice 1", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 64, "y": 64, "w": 16, "h": 176 } }] },
+   { "name": "Slice 2", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 80, "y": 64, "w": 241, "h": 16 } }] },
+   { "name": "Slice 3", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 80, "y": 224, "w": 96, "h": 48 } }] },
+   { "name": "Slice 4", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 208, "y": 224, "w": 112, "h": 48 } }] },
+   { "name": "Slice 5", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 304, "y": 80, "w": 16, "h": 144 } }] }
+  ]
+ }
+}

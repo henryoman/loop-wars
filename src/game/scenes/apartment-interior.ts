@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { PlayerController } from '../player/PlayerController';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
+import { CollisionLoader } from '../utils/CollisionLoader';
+import { TriggerManager } from '../utils/TriggerManager';
 
 export default class ApartmentInterior extends Phaser.Scene {
 
@@ -12,15 +14,27 @@ export default class ApartmentInterior extends Phaser.Scene {
 	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 	private playerController!: PlayerController;
-	private collisionMask?: Phaser.GameObjects.Image;
+	private collisionLoader!: CollisionLoader;
+	private triggerManager!: TriggerManager;
+	private collisionRects: Phaser.GameObjects.Rectangle[] = [];
 
 	preload() {
-		// Load the collision PNG for pixel-perfect collision
-		this.load.image('apartmentInteriorCollision', 'assets/images/levels/apartment-interior-collision.png');
+		// Initialize collision loader
+		this.collisionLoader = new CollisionLoader(this);
+		
+		// Load slice collision data from apartment-interior.json (without the "2")
+		this.collisionLoader.loadSliceCollision('apartmentCollision', 'assets/images/levels/apartment-interior.json');
+		
+		// Handle load errors gracefully
+		this.load.on('loaderror', (file: any) => {
+			if (file.key === 'apartmentCollision') {
+				console.warn('Collision data not found for ApartmentInterior - no collision will be active');
+			}
+		});
 	}
 
 	create() {
-		// Background image
+		// Background image - using apartment-interior.png (without the "2")
 		this.add.image(192, 144, "apartment-interior");
 
 		// Create the player physics sprite at center of screen
@@ -29,7 +43,7 @@ export default class ApartmentInterior extends Phaser.Scene {
 
 		// Set up player physics body - 12x12 centered horizontally, bottom aligned
 		this.player.setSize(12, 12); // Collision box size
-		this.player.setOffset(10, 20); // Offset 10 pixels from left to center, 20 from top for bottom 12 pixels
+		this.player.setOffset(11, 20); // Offset 11 pixels from left to center, 20 from top for bottom 12 pixels
 		this.player.setCollideWorldBounds(true);
 
 		// Set up input
@@ -41,57 +55,48 @@ export default class ApartmentInterior extends Phaser.Scene {
 		this.cameras.main.startFollow(this.player);
 		this.cameras.main.setLerp(0.1, 0.1);
 
-		// Create collision group for walls and obstacles
+		// Create slice-based collision system
 		this.collisionGroup = this.physics.add.staticGroup();
-		
-		// Set up pixel-perfect collision system
-		this.setupPixelPerfectCollision();
+		this.setupSliceCollision();
+
+		// Initialize trigger system
+		this.triggerManager = new TriggerManager(this);
+		this.setupTriggers();
 
 		// Initialize player controller
 		this.playerController = new PlayerController(this.player);
-
 	}
 
-	private setupPixelPerfectCollision() {
-		// Load the collision mask image (invisible)
-		this.collisionMask = this.add.image(0, 0, 'apartmentInteriorCollision');
-		this.collisionMask.setOrigin(0, 0);
-		this.collisionMask.setVisible(false);
+	private setupSliceCollision() {
+		// Create collision bodies from Aseprite slice data
+		this.collisionRects = this.collisionLoader.createSliceCollision('apartmentCollision', this.collisionGroup);
 		
-		console.log('Pixel-perfect collision system enabled for ApartmentInterior');
+		// Setup player collision with the collision group
+		this.collisionLoader.setupPlayerCollision(this.player, this.collisionGroup);
+		
+		// Uncomment below to enable debug visualization (red rectangles)
+		// this.collisionLoader.enableDebugVisualization(this.collisionRects);
+		
+		console.log('✅ Slice-based collision system enabled for ApartmentInterior');
 	}
 
-	private checkPixelCollision(x: number, y: number): boolean {
-		if (!this.collisionMask) return false;
+	private setupTriggers() {
+		// Add scene transition triggers at tiles 11,15 and 12,15 -> pacc-house
+		// Grid: 24x18 tiles (0-23 horizontal, 0-17 vertical)
+		// Tile 15 = row 15 out of 18 = near bottom of room
+		this.triggerManager.addSceneTrigger(11, 15, 'pacc-house', 'door_left');
+		this.triggerManager.addSceneTrigger(12, 15, 'pacc-house', 'door_right');
 		
-		// Get the texture data
-		const texture = this.collisionMask.texture;
-		const frame = this.collisionMask.frame;
+		// Setup player trigger collision
+		this.triggerManager.setupPlayerTriggers(this.player);
 		
-		// Check if coordinates are within bounds
-		if (x < 0 || y < 0 || x >= frame.width || y >= frame.height) {
-			return false;
-		}
+		// Uncomment below to enable debug visualization (green rectangles)
+		// this.triggerManager.enableDebugVisualization();
 		
-		// Get pixel data from the collision mask
-		const canvas = texture.getSourceImage() as HTMLCanvasElement;
-		if (canvas && canvas.getContext) {
-			const ctx = canvas.getContext('2d');
-			if (ctx) {
-				const imageData = ctx.getImageData(x, y, 1, 1);
-				const alpha = imageData.data[3]; // Alpha channel
-				return alpha > 0; // Collision if not transparent
-			}
-		}
-		
-		return false;
+		console.log('✅ Scene triggers setup: tiles (11,15) and (12,15) -> pacc-house');
 	}
 
 	update() {
-		// Store player position before movement
-		const oldX = this.player.x;
-		const oldY = this.player.y;
-
 		// Create input object from cursors
 		const input: IPlayerMovementInput = {
 			up: this.cursors.up.isDown,
@@ -102,30 +107,6 @@ export default class ApartmentInterior extends Phaser.Scene {
 
 		// Update player via controller
 		this.playerController.update(input);
-
-		// Check pixel-perfect collision after movement
-		if (this.collisionMask) {
-			// Check collision at player's collision box corners
-			const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-			const left = this.player.x + playerBody.offset.x;
-			const right = left + playerBody.width;
-			const top = this.player.y + playerBody.offset.y;
-			const bottom = top + playerBody.height;
-
-			// Check collision at multiple points around player's collision box
-			const hasCollision = 
-				this.checkPixelCollision(Math.floor(left), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(right - 1), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(left), Math.floor(bottom - 1)) ||
-				this.checkPixelCollision(Math.floor(right - 1), Math.floor(bottom - 1)) ||
-				this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(bottom - 1));
-
-			// If collision detected, revert to old position
-			if (hasCollision) {
-				this.player.setPosition(oldX, oldY);
-			}
-		}
 
 		// Debug log when moving (maintain existing debug behavior)
 		const playerState = this.playerController.getState();
