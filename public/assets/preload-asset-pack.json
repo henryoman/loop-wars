@@ -38,6 +38,11 @@
                 "url": "assets/images/levels/apartment-interior2.png",
                 "type": "image",
                 "key": "apartment-interior2"
+            },
+            {
+                "url": "assets/images/levels/chinatown-exterior.png",
+                "type": "image",
+                "key": "chinatown-exterior"
             }
         ]
     }
