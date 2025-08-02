@@ -41,6 +41,10 @@ export default class Preloader extends Phaser.Scene {
         
         // Load the start screen background
         this.load.image('startscreen', 'assets/images/screens/startscreen.png');
+
+        // ────── Chess assets ──────
+        this.load.image('chessBoard', 'assets/images/chess/board.png');
+        this.load.spritesheet('chessPieces', 'assets/images/chess/chess-pieces.png', { frameWidth: 32, frameHeight: 32 });
     }
 
     create ()

@@ -90,7 +90,11 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.triggerManager.addSceneTrigger(10, 20, 'apartment-interior', 'door_left');
 		this.triggerManager.addSceneTrigger(11, 20, 'apartment-interior', 'door_right');
 		
-		// Setup player trigger collision
+		        // Add chess scene triggers at tiles 16,7 and 17,7
+        this.triggerManager.addSceneTrigger(16, 7, 'ChessScene', 'chess_left');
+        this.triggerManager.addSceneTrigger(17, 7, 'ChessScene', 'chess_right');
+
+        // Setup player trigger collision
 		this.triggerManager.setupPlayerTriggers(this.player);
 		
 		// Uncomment below to enable debug visualization (green rectangles)
