@@ -2,7 +2,7 @@
     "section1": {
         "files": [
             {
-                "url": "assets/images/loop-player.png",
+                "url": "assets/images/sprites/player-1.png",
                 "frameConfig": {
                     "frameWidth": 32,
                     "frameHeight": 32,
