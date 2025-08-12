@@ -1,22 +1,18 @@
 import Phaser from 'phaser';
-import { PlayerController } from '../player/PlayerController';
-import { IPlayerMovementInput } from '../player/types/PlayerTypes';
 import { CollisionLoader } from '../utils/CollisionLoader';
 import { TriggerManager } from '../utils/TriggerManager';
+import BaseMapScene from './BaseMapScene';
 
-export default class ChinatownExterior extends Phaser.Scene {
+export default class ChinatownExterior extends BaseMapScene {
 
-	constructor() {
-		super("chinatown-exterior");
-	}
+        constructor() {
+                super("chinatown-exterior");
+        }
 
-	private player!: Phaser.Physics.Arcade.Sprite;
-	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
-	private playerController!: PlayerController;
-	private collisionLoader!: CollisionLoader;
-	private triggerManager!: TriggerManager;
-	private collisionRects: Phaser.GameObjects.Rectangle[] = [];
+        private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
+        private collisionLoader!: CollisionLoader;
+        private triggerManager!: TriggerManager;
+        private collisionRects: Phaser.GameObjects.Rectangle[] = [];
 
 	preload() {
 		// Initialize collision loader
@@ -33,44 +29,22 @@ export default class ChinatownExterior extends Phaser.Scene {
 		});
 	}
 
-	create() {
-		// Background image - position at top-left of world (0,0) 
-		const bg = this.add.image(0, 0, "chinatown-exterior");
-		bg.setOrigin(0, 0); // Set origin to top-left so image starts at (0,0)
+        create() {
+                // Background image - position at top-left of world (0,0)
+                const bg = this.add.image(0, 0, "chinatown-exterior");
+                bg.setOrigin(0, 0); // Set origin to top-left so image starts at (0,0)
 
-		// Create the player physics sprite at position 40,25
-		this.player = this.physics.add.sprite(40, 25, 'loop-player');
-		this.player.play('player-idle-down');
+                super.create(720, 480, 40, 25);
+                this.cameras.main.setLerp(1, 1);
 
-		// Set up player physics body - 12x12 centered horizontally, bottom aligned
-		this.player.setSize(12, 12); // Collision box size
-		this.player.setOffset(11, 20); // Offset 11 pixels from left to center, 20 from top for bottom 12 pixels
-		this.player.setCollideWorldBounds(true);
+                // Create slice-based collision system
+                this.collisionGroup = this.physics.add.staticGroup();
+                this.setupSliceCollision();
 
-		// Set up input
-		this.cursors = this.input.keyboard!.createCursorKeys();
-
-		// Set world bounds for physics and camera to match actual map size
-		this.physics.world.setBounds(0, 0, 720, 480);
-		this.cameras.main.setBounds(0, 0, 720, 480);
-		
-		// Enable pixel-perfect camera for pixel art (no sub-pixel rendering)
-		this.cameras.main.roundPixels = true;
-		
-		// Camera follows player with no smoothing for pixel art
-		this.cameras.main.startFollow(this.player, true); // true = roundPixels enabled
-
-		// Create slice-based collision system
-		this.collisionGroup = this.physics.add.staticGroup();
-		this.setupSliceCollision();
-
-		// Initialize trigger system
-		this.triggerManager = new TriggerManager(this);
-		this.setupTriggers();
-
-		// Initialize player controller
-		this.playerController = new PlayerController(this.player);
-	}
+                // Initialize trigger system
+                this.triggerManager = new TriggerManager(this);
+                this.setupTriggers();
+        }
 
 	private setupSliceCollision() {
 		// Create collision bodies from Aseprite slice data
@@ -85,41 +59,21 @@ export default class ChinatownExterior extends Phaser.Scene {
 		console.log('✅ Slice-based collision system enabled for ChinatownExterior');
 	}
 
-	private setupTriggers() {
-		// Add scene transition triggers at tiles 10,20 and 11,20 -> apartment-interior
-		this.triggerManager.addSceneTrigger(10, 20, 'apartment-interior', 'door_left');
-		this.triggerManager.addSceneTrigger(11, 20, 'apartment-interior', 'door_right');
-		
-		        // Add chess scene triggers at tiles 16,7 and 17,7
-        this.triggerManager.addSceneTrigger(16, 7, 'ChessScene', 'chess_left');
-        this.triggerManager.addSceneTrigger(17, 7, 'ChessScene', 'chess_right');
+        private setupTriggers() {
+                // Add scene transition triggers at tiles 10,20 and 11,20 -> apartment-interior
+                this.triggerManager.addSceneTrigger(10, 20, 'apartment-interior', 'door_left');
+                this.triggerManager.addSceneTrigger(11, 20, 'apartment-interior', 'door_right');
 
-        // Setup player trigger collision
-		this.triggerManager.setupPlayerTriggers(this.player);
-		
-		// Uncomment below to enable debug visualization (green rectangles)
-		// this.triggerManager.enableDebugVisualization();
-		
-		console.log('✅ Scene triggers setup: tiles (10,20) and (11,20) -> apartment-interior');
-	}
+                // Add chess scene triggers at tiles 16,7 and 17,7
+                this.triggerManager.addSceneTrigger(16, 7, 'ChessScene', 'chess_left');
+                this.triggerManager.addSceneTrigger(17, 7, 'ChessScene', 'chess_right');
 
-	update() {
-		// Create input object from cursors
-		const input: IPlayerMovementInput = {
-			up: this.cursors.up.isDown,
-			down: this.cursors.down.isDown,
-			left: this.cursors.left.isDown,
-			right: this.cursors.right.isDown
-		};
+                // Setup player trigger collision
+                this.triggerManager.setupPlayerTriggers(this.player);
 
-		// Update player via controller
-		this.playerController.update(input);
+                // Uncomment below to enable debug visualization (green rectangles)
+                // this.triggerManager.enableDebugVisualization();
 
-		// Debug log when moving (maintain existing debug behavior)
-		const playerState = this.playerController.getState();
-		if (playerState.currentState === 'walking') {
-			const sprite = this.playerController.getSprite();
-			console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
-		}
-	}
+                console.log('✅ Scene triggers setup: tiles (10,20) and (11,20) -> apartment-interior');
+        }
 }

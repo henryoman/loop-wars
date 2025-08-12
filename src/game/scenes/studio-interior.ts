@@ -1,56 +1,33 @@
 import Phaser from 'phaser';
-import { PlayerController } from '../player/PlayerController';
-import { IPlayerMovementInput } from '../player/types/PlayerTypes';
+import BaseMapScene from './BaseMapScene';
 
-export default class StudioInterior extends Phaser.Scene {
+export default class StudioInterior extends BaseMapScene {
 
-	constructor() {
-		super("studio-interior");
-	}
+        constructor() {
+                super("studio-interior");
+        }
 
-	private player!: Phaser.Physics.Arcade.Sprite;
-	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
-	private playerController!: PlayerController;
-	private collisionMask?: Phaser.GameObjects.Image;
+        private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
+        private collisionMask?: Phaser.GameObjects.Image;
 
 	preload() {
 		// Load the collision PNG for pixel-perfect collision
 		this.load.image('studioInteriorCollision', 'assets/images/levels/studio-interior-collision.png');
 	}
 
-	create() {
-		// Background image
-		this.add.image(192, 144, "studio-interior");
+        create() {
+                // Background image
+                this.add.image(192, 144, "studio-interior");
 
-		// Create the player physics sprite at center of screen
-		this.player = this.physics.add.sprite(192, 144, 'loop-player');
-		this.player.play('player-idle-down');
+                super.create(384, 288, 192, 144);
 
-		// Set up player physics body - 12x12 centered horizontally, bottom aligned
-		this.player.setSize(12, 12); // Collision box size
-		this.player.setOffset(10, 20); // Offset 10 pixels from left to center, 20 from top for bottom 12 pixels
-		this.player.setCollideWorldBounds(true);
+                // Create collision group for walls and obstacles
+                this.collisionGroup = this.physics.add.staticGroup();
 
-		// Set up input
-		this.cursors = this.input.keyboard!.createCursorKeys();
+                // Set up pixel-perfect collision system
+                this.setupPixelPerfectCollision();
 
-		// Set world bounds for physics and camera
-		this.physics.world.setBounds(0, 0, 384, 288);
-		this.cameras.main.setBounds(0, 0, 384, 288);
-		this.cameras.main.startFollow(this.player);
-		this.cameras.main.setLerp(0.1, 0.1);
-
-		// Create collision group for walls and obstacles
-		this.collisionGroup = this.physics.add.staticGroup();
-		
-		// Set up pixel-perfect collision system
-		this.setupPixelPerfectCollision();
-
-		// Initialize player controller
-		this.playerController = new PlayerController(this.player);
-
-	}
+        }
 
 	private setupPixelPerfectCollision() {
 		// Load the collision mask image (invisible)
@@ -87,51 +64,30 @@ export default class StudioInterior extends Phaser.Scene {
 		return false;
 	}
 
-	update() {
-		// Store player position before movement
-		const oldX = this.player.x;
-		const oldY = this.player.y;
+        protected handlePlayerUpdate(): void {
+                const oldX = this.player.x;
+                const oldY = this.player.y;
 
-		// Create input object from cursors
-		const input: IPlayerMovementInput = {
-			up: this.cursors.up.isDown,
-			down: this.cursors.down.isDown,
-			left: this.cursors.left.isDown,
-			right: this.cursors.right.isDown
-		};
+                super.handlePlayerUpdate();
 
-		// Update player via controller
-		this.playerController.update(input);
+                if (this.collisionMask) {
+                        const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+                        const left = this.player.x + playerBody.offset.x;
+                        const right = left + playerBody.width;
+                        const top = this.player.y + playerBody.offset.y;
+                        const bottom = top + playerBody.height;
 
-		// Check pixel-perfect collision after movement
-		if (this.collisionMask) {
-			// Check collision at player's collision box corners
-			const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-			const left = this.player.x + playerBody.offset.x;
-			const right = left + playerBody.width;
-			const top = this.player.y + playerBody.offset.y;
-			const bottom = top + playerBody.height;
+                        const hasCollision =
+                                this.checkPixelCollision(Math.floor(left), Math.floor(top)) ||
+                                this.checkPixelCollision(Math.floor(right - 1), Math.floor(top)) ||
+                                this.checkPixelCollision(Math.floor(left), Math.floor(bottom - 1)) ||
+                                this.checkPixelCollision(Math.floor(right - 1), Math.floor(bottom - 1)) ||
+                                this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(top)) ||
+                                this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(bottom - 1));
 
-			// Check collision at multiple points around player's collision box
-			const hasCollision = 
-				this.checkPixelCollision(Math.floor(left), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(right - 1), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(left), Math.floor(bottom - 1)) ||
-				this.checkPixelCollision(Math.floor(right - 1), Math.floor(bottom - 1)) ||
-				this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(top)) ||
-				this.checkPixelCollision(Math.floor(left + playerBody.width/2), Math.floor(bottom - 1));
-
-			// If collision detected, revert to old position
-			if (hasCollision) {
-				this.player.setPosition(oldX, oldY);
-			}
-		}
-
-		// Debug log when moving (maintain existing debug behavior)
-		const playerState = this.playerController.getState();
-		if (playerState.currentState === 'walking') {
-			const sprite = this.playerController.getSprite();
-			console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
-		}
-	}
+                        if (hasCollision) {
+                                this.player.setPosition(oldX, oldY);
+                        }
+                }
+        }
 }
