@@ -1,96 +1,62 @@
 import Phaser from 'phaser';
+import BaseMapScene, { MapSceneConfig } from './BaseMapScene';
 import { PlayerController } from '../player/PlayerController';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
-import { CollisionLoader } from '../utils/CollisionLoader';
 
-export default class PaccHouse extends Phaser.Scene {
+export default class PaccHouse extends BaseMapScene {
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private playerController!: PlayerController;
 
-	constructor() {
-		super("pacc-house");
-	}
+    private sceneConfig: MapSceneConfig = {
+        collision: {
+            key: 'paccHouseCollision',
+            path: 'assets/images/levels/pacc-house-interior.json',
+        },
+    };
 
-	private player!: Phaser.Physics.Arcade.Sprite;
-	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
-	private playerController!: PlayerController;
-	private collisionLoader!: CollisionLoader;
-	private collisionRects: Phaser.GameObjects.Rectangle[] = [];
+    constructor() {
+        super('pacc-house');
+    }
 
-	preload() {
-		// Initialize collision loader
-		this.collisionLoader = new CollisionLoader(this);
-		
-		// Load slice collision data from pacc-house-interior.json
-		this.collisionLoader.loadSliceCollision('paccHouseCollision', 'assets/images/levels/pacc-house-interior.json');
-		
-		// Handle load errors gracefully
-		this.load.on('loaderror', (file: any) => {
-			if (file.key === 'paccHouseCollision') {
-				console.warn('Collision data not found for PaccHouse - no collision will be active');
-			}
-		});
-	}
+    preload() {
+        super.preload(this.sceneConfig);
+    }
 
-	create() {
-		// Background image
-		this.add.image(192, 144, "pacc-house-interior");
+    create() {
+        this.add.image(192, 144, 'pacc-house-interior');
 
-		// Create the player physics sprite at center of screen
-		this.player = this.physics.add.sprite(192, 144, 'loop-player');
-		this.player.play('player-idle-down');
+        this.player = this.physics.add.sprite(192, 144, 'loop-player');
+        this.player.play('player-idle-down');
+        this.player.setSize(12, 12);
+        this.player.setOffset(10, 20);
+        this.player.setCollideWorldBounds(true);
 
-		// Set up player physics body - 12x12 centered horizontally, bottom aligned
-		this.player.setSize(12, 12); // Collision box size
-		this.player.setOffset(10, 20); // Offset 10 pixels from left to center, 20 from top for bottom 12 pixels
-		this.player.setCollideWorldBounds(true);
+        this.cursors = this.input.keyboard!.createCursorKeys();
 
-		// Set up input
-		this.cursors = this.input.keyboard!.createCursorKeys();
+        this.physics.world.setBounds(0, 0, 384, 288);
+        this.cameras.main.setBounds(0, 0, 384, 288);
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.setLerp(0.1, 0.1);
 
-		// Set world bounds for physics and camera
-		this.physics.world.setBounds(0, 0, 384, 288);
-		this.cameras.main.setBounds(0, 0, 384, 288);
-		this.cameras.main.startFollow(this.player);
-		this.cameras.main.setLerp(0.1, 0.1);
+        super.create(this.sceneConfig);
 
-		// Create slice-based collision system
-		this.collisionGroup = this.physics.add.staticGroup();
-		this.setupSliceCollision();
+        this.playerController = new PlayerController(this.player);
+    }
 
-		// Initialize player controller
-		this.playerController = new PlayerController(this.player);
-	}
+    update() {
+        const input: IPlayerMovementInput = {
+            up: this.cursors.up.isDown,
+            down: this.cursors.down.isDown,
+            left: this.cursors.left.isDown,
+            right: this.cursors.right.isDown,
+        };
 
-	private setupSliceCollision() {
-		// Create collision bodies from Aseprite slice data
-		this.collisionRects = this.collisionLoader.createSliceCollision('paccHouseCollision', this.collisionGroup);
-		
-		// Setup player collision with the collision group
-		this.collisionLoader.setupPlayerCollision(this.player, this.collisionGroup);
-		
-		// Uncomment below to enable debug visualization (red rectangles)
-		// this.collisionLoader.enableDebugVisualization(this.collisionRects);
-		
-		console.log('✅ Slice-based collision system enabled for PaccHouse');
-	}
+        this.playerController.update(input);
 
-	update() {
-		// Create input object from cursors
-		const input: IPlayerMovementInput = {
-			up: this.cursors.up.isDown,
-			down: this.cursors.down.isDown,
-			left: this.cursors.left.isDown,
-			right: this.cursors.right.isDown
-		};
-
-		// Update player via controller
-		this.playerController.update(input);
-
-		// Debug log when moving (maintain existing debug behavior)
-		const playerState = this.playerController.getState();
-		if (playerState.currentState === 'walking') {
-			const sprite = this.playerController.getSprite();
-			console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
-		}
-	}
+        const playerState = this.playerController.getState();
+        if (playerState.currentState === 'walking') {
+            const sprite = this.playerController.getSprite();
+            console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
+        }
+    }
 }
