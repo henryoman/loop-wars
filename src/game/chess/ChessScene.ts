@@ -10,6 +10,9 @@ export default class ChessScene extends Phaser.Scene {
   private chess!: Chess;
   private cursor!: Cursor;
   private sprites: (Phaser.GameObjects.Sprite | null)[][] = [];
+  private moveMarkers: Phaser.GameObjects.Rectangle[] = [];
+  private selectedSprite: Phaser.GameObjects.Sprite | null = null;
+  private inputLocked = false; // lock during AI move animations
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -62,6 +65,7 @@ export default class ChessScene extends Phaser.Scene {
   }
 
   update(time: number): void {
+    if (this.inputLocked) return;
     // Arrow/WASD movement debounce (150 ms)
     if (time > this.debounce) {
       if ((this.cursors.left!.isDown) || (this.wasd.left!.isDown)) { this.cursor.move(-1, 0); this.debounce = time + 150; }
@@ -79,11 +83,14 @@ export default class ChessScene extends Phaser.Scene {
   private legalTargets: Set<string> = new Set();
 
   private handleA(): void {
+    if (this.inputLocked) return;
     const sq = this.cursor.algebraic();
+    console.log('[CHESS] A pressed on', sq);
     this.handleSquare(sq);
   }
 
   private handlePointer(pointer: Phaser.Input.Pointer): void {
+    if (this.inputLocked) return;
     const sq = this.pointerToSquare(pointer.worldX, pointer.worldY);
     if (!sq) return;
 
@@ -97,11 +104,16 @@ export default class ChessScene extends Phaser.Scene {
     if (!this.selected) {
       // No source selected yet → try selecting own piece
       const piece = this.chess.get(sq);
+      console.log('[CHESS] Selecting', sq, 'piece=', piece);
       if (piece && piece.color === this.chess.turn()) {
         this.selected = sq;
-        this.legalTargets = new Set(
-          this.chess.moves({ square: sq, verbose: true }).map(m => (m as Move).to)
-        );
+        const moves = this.chess.moves({ square: sq, verbose: true }) as Move[];
+        this.legalTargets = new Set(moves.map(m => m.to));
+        console.log('[CHESS] Legal targets from', sq, '→', Array.from(this.legalTargets));
+        // Tint the selected source sprite
+        const { file, rank } = this.algToCoords(sq);
+        this.selectedSprite = this.sprites[rank][file] || null;
+        if (this.selectedSprite) this.selectedSprite.setTint(0xffff00);
         this.highlightTargets(true);
       }
       return;
@@ -110,23 +122,42 @@ export default class ChessScene extends Phaser.Scene {
     // We already have a source; attempt to move
     if (this.legalTargets.has(sq)) {
       const move = this.chess.move({ from: this.selected, to: sq }) as Move;
+      console.log('[CHESS] Move success', move);
       this.animateMove(move);
-      if (this.chess.isGameOver()) this.finishGame();
+      // Schedule simple AI reply after animation
+      this.time.delayedCall(150, () => this.makeAIMoveIfNeeded());
+    }
+    else {
+      console.log('[CHESS] Move rejected: not in legal set', sq);
     }
     this.clearSelection();
   }
 
   private clearSelection(): void {
     this.highlightTargets(false);
+    if (this.selectedSprite) {
+      this.selectedSprite.setTint(0xffffff);
+      this.selectedSprite = null;
+    }
     this.selected = null;
     this.legalTargets.clear();
   }
 
   private highlightTargets(state: boolean): void {
+    // Clear existing markers
+    this.moveMarkers.forEach(m => m.destroy());
+    this.moveMarkers.length = 0;
+
+    if (!state) return;
+
+    // Draw translucent markers on all legal destination squares
     this.legalTargets.forEach(sq => {
       const { file, rank } = this.algToCoords(sq);
-      const spr = this.sprites[rank][file];
-      if (spr) spr.setTint(state ? 0x00ff00 : 0xffffff);
+      const pos = this.squareToWorld(file, rank);
+      const marker = this.add.rectangle(pos.x, pos.y, 32, 32, 0x00ff00, 0.2);
+      marker.setStrokeStyle(1, 0x00ff00, 0.9);
+      marker.setDepth(10);
+      this.moveMarkers.push(marker);
     });
   }
 
@@ -134,7 +165,11 @@ export default class ChessScene extends Phaser.Scene {
     const src = this.algToCoords(move.from);
     const dst = this.algToCoords(move.to);
 
-    const moving = this.sprites[src.rank][src.file]!;
+    const moving = this.sprites[src.rank][src.file];
+    if (!moving) {
+      console.warn('[CHESS] No sprite at source square', move.from, src);
+      return;
+    }
     const captured = this.sprites[dst.rank][dst.file];
     if (captured) captured.destroy();
 
@@ -157,6 +192,33 @@ export default class ChessScene extends Phaser.Scene {
     this.scene.stop();
   }
 
+  // ───────────────────────── AI (very simple): prefer capture, else random
+  private makeAIMoveIfNeeded(): void {
+    if (this.chess.isGameOver()) { this.finishGame(); return; }
+    // Assuming player is White; AI plays when it's Black's turn
+    if (this.chess.turn() !== 'b') return;
+
+    this.inputLocked = true;
+    const moves = this.chess.moves({ verbose: true }) as Move[];
+    if (moves.length === 0) { this.inputLocked = false; this.finishGame(); return; }
+
+    let chosen = moves.find(m => (m as any).captured);
+    if (!chosen) {
+      const promos = moves.filter(m => (m as any).promotion);
+      if (promos.length) chosen = promos[Math.floor(Math.random() * promos.length)];
+    }
+    if (!chosen) chosen = moves[Math.floor(Math.random() * moves.length)];
+
+    const moved = this.chess.move({ from: chosen.from, to: chosen.to, promotion: (chosen as any).promotion }) as Move;
+    console.log('[CHESS][AI] Move', moved);
+    this.animateMove(moved);
+
+    this.time.delayedCall(150, () => {
+      this.inputLocked = false;
+      if (this.chess.isGameOver()) this.finishGame();
+    });
+  }
+
   // ───────────────────────── helpers ─────────────────────────
   private squareToWorld(file: number, rank: number) {
     return {
@@ -173,10 +235,12 @@ export default class ChessScene extends Phaser.Scene {
   }
 
   private codeToFrame(piece: { type: string; color: string; }): number {
-    const base = piece.color === 'w' ? 0 : 6;
-    return (
-      { p: 0, r: 1, n: 2, b: 3, q: 4, k: 5 }[piece.type as 'p'] + base
-    );
+    // Our sheet is 6 columns × 2 rows (top = white, bottom = black)
+    const whiteBase = 0;
+    const blackBase = 6;
+    const indexMap: Record<string, number> = { p: 0, r: 1, n: 2, b: 3, q: 4, k: 5 };
+    const base = piece.color === 'w' ? whiteBase : blackBase;
+    return base + indexMap[piece.type];
   }
 
   private pointerToSquare(x: number, y: number): string | null {
@@ -185,4 +249,7 @@ export default class ChessScene extends Phaser.Scene {
     if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
     return 'abcdefgh'[file] + (rank + 1);
   }
+
+  // Optional: simple on-screen legend for controls
+  // (call once if you want: this.add.text(2, 2, 'Arrows/WASD: Move  J/Z: Select  K/X: Cancel', { fontSize: '8px' }))
 }
