@@ -33,10 +33,10 @@ export default class ChinatownExterior extends Phaser.Scene {
 		});
 	}
 
-	create() {
-		// Background image - position at top-left of world (0,0) 
-		const bg = this.add.image(0, 0, "chinatown-exterior");
-		bg.setOrigin(0, 0); // Set origin to top-left so image starts at (0,0)
+        create() {
+                // Background image - position at top-left of world (0,0)
+                const bg = this.add.image(0, 0, "chinatown-exterior");
+                bg.setOrigin(0, 0); // Set origin to top-left so image starts at (0,0)
 
 		// Create the player physics sprite at position 40,25
 		this.player = this.physics.add.sprite(40, 25, 'loop-player');
@@ -64,13 +64,19 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.collisionGroup = this.physics.add.staticGroup();
 		this.setupSliceCollision();
 
-		// Initialize trigger system
-		this.triggerManager = new TriggerManager(this);
-		this.setupTriggers();
+                // Initialize trigger system
+                this.triggerManager = new TriggerManager(this);
+                this.setupTriggers();
 
-		// Initialize player controller
-		this.playerController = new PlayerController(this.player);
-	}
+                // Initialize player controller
+                this.playerController = new PlayerController(this.player);
+
+                // Listen for chess results to update game state
+                this.game.events.on('chess-result', this.handleChessResult, this);
+                this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+                        this.game.events.off('chess-result', this.handleChessResult, this);
+                });
+        }
 
 	private setupSliceCollision() {
 		// Create collision bodies from Aseprite slice data
@@ -103,7 +109,7 @@ export default class ChinatownExterior extends Phaser.Scene {
 		console.log('✅ Scene triggers setup: tiles (10,20) and (11,20) -> apartment-interior');
 	}
 
-	update() {
+        update() {
 		// Create input object from cursors
 		const input: IPlayerMovementInput = {
 			up: this.cursors.up.isDown,
@@ -116,10 +122,15 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.playerController.update(input);
 
 		// Debug log when moving (maintain existing debug behavior)
-		const playerState = this.playerController.getState();
-		if (playerState.currentState === 'walking') {
-			const sprite = this.playerController.getSprite();
-			console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
-		}
-	}
+                const playerState = this.playerController.getState();
+                if (playerState.currentState === 'walking') {
+                        const sprite = this.playerController.getSprite();
+                        console.log(`Moving: ${playerState.lastDirection}, Position: ${sprite.x}, ${sprite.y}`);
+                }
+        }
+
+        private handleChessResult(data: { result: string; winner: string | null; }) {
+                console.log('♟️ Chess finished:', data);
+                // TODO: adjust player money or other state based on result
+        }
 }

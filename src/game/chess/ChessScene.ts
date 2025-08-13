@@ -11,8 +11,9 @@ export default class ChessScene extends Phaser.Scene {
   private sprites: (Phaser.GameObjects.Sprite | null)[][] = [];
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private keyA!: Phaser.Input.Keyboard.Key; // Z key acts as A-button
-  private keyB!: Phaser.Input.Keyboard.Key; // X key acts as B-button
+  private wasd!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private keyA!: Phaser.Input.Keyboard.Key[]; // J/Z act as A-button
+  private keyB!: Phaser.Input.Keyboard.Key[]; // K/X act as B-button
   private debounce = 0;
 
   create(): void {
@@ -26,8 +27,23 @@ export default class ChessScene extends Phaser.Scene {
 
     // Keyboard input
     this.cursors = this.input.keyboard!.createCursorKeys();
-    this.keyA = this.input.keyboard!.addKey('Z');
-    this.keyB = this.input.keyboard!.addKey('X');
+    this.wasd = this.input.keyboard!.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as Phaser.Types.Input.Keyboard.CursorKeys;
+    this.keyA = [
+      this.input.keyboard!.addKey('J'),
+      this.input.keyboard!.addKey('Z'),
+    ];
+    this.keyB = [
+      this.input.keyboard!.addKey('K'),
+      this.input.keyboard!.addKey('X'),
+    ];
+
+    // Mouse/touch input
+    this.input.on('pointerdown', this.handlePointer, this);
   }
 
   private initSprites(): void {
@@ -47,14 +63,22 @@ export default class ChessScene extends Phaser.Scene {
   update(time: number): void {
     // Arrow-key movement debounce (150 ms)
     if (time > this.debounce) {
-      if (this.cursors.left!.isDown) { this.cursor.move(-1, 0); this.debounce = time + 150; }
-      if (this.cursors.right!.isDown) { this.cursor.move(1, 0);  this.debounce = time + 150; }
-      if (this.cursors.up!.isDown) { this.cursor.move(0, 1);   this.debounce = time + 150; }
-      if (this.cursors.down!.isDown) { this.cursor.move(0, -1);  this.debounce = time + 150; }
+      if (this.cursors.left!.isDown || this.wasd.left!.isDown) {
+        this.cursor.move(-1, 0); this.debounce = time + 150;
+      }
+      if (this.cursors.right!.isDown || this.wasd.right!.isDown) {
+        this.cursor.move(1, 0); this.debounce = time + 150;
+      }
+      if (this.cursors.up!.isDown || this.wasd.up!.isDown) {
+        this.cursor.move(0, 1); this.debounce = time + 150;
+      }
+      if (this.cursors.down!.isDown || this.wasd.down!.isDown) {
+        this.cursor.move(0, -1); this.debounce = time + 150;
+      }
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.keyA)) this.handleA();
-    if (Phaser.Input.Keyboard.JustDown(this.keyB)) this.clearSelection();
+    if (this.keyA.some(k => Phaser.Input.Keyboard.JustDown(k))) this.handleA();
+    if (this.keyB.some(k => Phaser.Input.Keyboard.JustDown(k))) this.clearSelection();
   }
 
   // ───────────────────────── selection logic ─────────────────────────
@@ -63,7 +87,20 @@ export default class ChessScene extends Phaser.Scene {
 
   private handleA(): void {
     const sq = this.cursor.algebraic();
+    this.handleSquare(sq);
+  }
 
+  private handlePointer(pointer: Phaser.Input.Pointer): void {
+    const sq = this.pointerToSquare(pointer.worldX, pointer.worldY);
+    if (!sq) return;
+
+    const { file, rank } = this.algToCoords(sq);
+    this.cursor.file = file;
+    this.cursor.rank = rank;
+    this.handleSquare(sq);
+  }
+
+  private handleSquare(sq: string): void {
     if (!this.selected) {
       // No source selected yet → try selecting own piece
       const piece = this.chess.get(sq);
@@ -120,6 +157,10 @@ export default class ChessScene extends Phaser.Scene {
       ? `${this.chess.turn() === 'w' ? 'Black' : 'White'} wins`
       : 'Draw';
     this.events.emit('chess-done', result);
+    const winner = this.chess.inCheckmate()
+      ? this.chess.turn() === 'w' ? 'black' : 'white'
+      : null;
+    this.game.events.emit('chess-result', { result, winner });
     this.scene.stop();
   }
 
@@ -143,5 +184,12 @@ export default class ChessScene extends Phaser.Scene {
     return (
       { p: 0, r: 1, n: 2, b: 3, q: 4, k: 5 }[piece.type as 'p'] + base
     );
+  }
+
+  private pointerToSquare(x: number, y: number): string | null {
+    const file = Math.floor((x - this.boardOrigin.x) / 32);
+    const rank = 7 - Math.floor((y - this.boardOrigin.y) / 32);
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
+    return 'abcdefgh'[file] + (rank + 1);
   }
 }
