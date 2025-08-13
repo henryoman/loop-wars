@@ -14,12 +14,12 @@
         "export:collision:all": "bun scripts/export-collision.js all"
     },
     "devDependencies": {
-        "typescript": "~5.7.3",
-        "vite": "^6.3.5",
+        "typescript": "~5.9.2",
+        "vite": "^7.1.2",
         "terser": "^5.43.1"
     },
     "dependencies": {
         "chess.js": "^1.4.0",
-        "phaser": "3.85.0"
+        "phaser": "3.90.0"
     }
 }
