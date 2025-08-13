@@ -1,11 +1,11 @@
 import ApartmentInterior from './scenes/apartment-interior';
-import Boot from './scenes/boot';
+import Boot from './scenes/Boot';
 import ChinatownExterior from './scenes/chinatown-exterior';
 import ChessScene from './chess/ChessScene';
 import MainMenu from './scenes/main-menu';
 import PaccHouse from './scenes/pacc-house-interior';
 import Phaser from 'phaser';
-import Preloader from './scenes/preloader';
+import Preloader from './scenes/Preloader';
 import StudioInterior from './scenes/studio-interior';
 import TrapHouse from './scenes/trap-house';
 
