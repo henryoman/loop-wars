@@ -28,6 +28,9 @@ export default class ChessScene extends Phaser.Scene {
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.keyA = this.input.keyboard!.addKey('Z');
     this.keyB = this.input.keyboard!.addKey('X');
+
+    // Mouse/touch input
+    this.input.on('pointerdown', this.handlePointer, this);
   }
 
   private initSprites(): void {
@@ -63,7 +66,20 @@ export default class ChessScene extends Phaser.Scene {
 
   private handleA(): void {
     const sq = this.cursor.algebraic();
+    this.handleSquare(sq);
+  }
 
+  private handlePointer(pointer: Phaser.Input.Pointer): void {
+    const sq = this.pointerToSquare(pointer.worldX, pointer.worldY);
+    if (!sq) return;
+
+    const { file, rank } = this.algToCoords(sq);
+    this.cursor.file = file;
+    this.cursor.rank = rank;
+    this.handleSquare(sq);
+  }
+
+  private handleSquare(sq: string): void {
     if (!this.selected) {
       // No source selected yet → try selecting own piece
       const piece = this.chess.get(sq);
@@ -120,6 +136,10 @@ export default class ChessScene extends Phaser.Scene {
       ? `${this.chess.turn() === 'w' ? 'Black' : 'White'} wins`
       : 'Draw';
     this.events.emit('chess-done', result);
+    const winner = this.chess.inCheckmate()
+      ? this.chess.turn() === 'w' ? 'black' : 'white'
+      : null;
+    this.game.events.emit('chess-result', { result, winner });
     this.scene.stop();
   }
 
@@ -143,5 +163,12 @@ export default class ChessScene extends Phaser.Scene {
     return (
       { p: 0, r: 1, n: 2, b: 3, q: 4, k: 5 }[piece.type as 'p'] + base
     );
+  }
+
+  private pointerToSquare(x: number, y: number): string | null {
+    const file = Math.floor((x - this.boardOrigin.x) / 32);
+    const rank = 7 - Math.floor((y - this.boardOrigin.y) / 32);
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
+    return 'abcdefgh'[file] + (rank + 1);
   }
 }
