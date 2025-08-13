@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { Chess } from 'chess.js';
 import type { Move } from 'chess.js';
 import Cursor from './cursor';
+import { GameState } from '../state/GameState';
+import MoneyText from '../ui/MoneyText';
 
 export default class ChessScene extends Phaser.Scene {
   constructor() { super('ChessScene'); }
@@ -28,6 +30,9 @@ export default class ChessScene extends Phaser.Scene {
     this.chess = new Chess();
     this.cursor = new Cursor(this, this.boardOrigin.x, this.boardOrigin.y);
     this.initSprites();
+
+    // Tiny money label (viewport-fixed) while in chess scene
+    new MoneyText(this);
 
     // Keyboard input (arrows + WASD; A-button = J/Z, B-button = K/X)
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -189,6 +194,7 @@ export default class ChessScene extends Phaser.Scene {
       ? this.chess.turn() === 'w' ? 'black' : 'white'
       : null;
     this.game.events.emit('chess-result', { result, winner });
+    if (winner === 'white') GameState.addMoney(10000);
     this.scene.stop();
   }
 

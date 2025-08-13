@@ -92,7 +92,7 @@ export default class Preloader extends Phaser.Scene {
             repeat: -1
         });
 
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
+        // Then move to the MainMenu (HUD intentionally not launched)
         this.scene.start('MainMenu');
     }
 }

@@ -3,6 +3,8 @@ import { PlayerController } from '../player/PlayerController';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
 import { CollisionLoader } from '../utils/CollisionLoader';
 import { TriggerManager } from '../utils/TriggerManager';
+import DialoguePanel from '../ui/DialoguePanel';
+import MoneyText from '../ui/MoneyText';
 
 export default class ChinatownExterior extends Phaser.Scene {
 
@@ -17,6 +19,8 @@ export default class ChinatownExterior extends Phaser.Scene {
 	private collisionLoader!: CollisionLoader;
 	private triggerManager!: TriggerManager;
 	private collisionRects: Phaser.GameObjects.Rectangle[] = [];
+    private dialogue!: DialoguePanel;
+    private moneyText!: MoneyText;
 
 	preload() {
 		// Initialize collision loader
@@ -64,9 +68,14 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.collisionGroup = this.physics.add.staticGroup();
 		this.setupSliceCollision();
 
-                // Initialize trigger system
+		// Initialize trigger system
                 this.triggerManager = new TriggerManager(this);
                 this.setupTriggers();
+
+        // Dialogue system (bottom third panel)
+        this.dialogue = new DialoguePanel(this);
+        // Tiny money label (viewport-fixed)
+        this.moneyText = new MoneyText(this);
 
                 // Initialize player controller
                 this.playerController = new PlayerController(this.player);
@@ -97,8 +106,8 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.triggerManager.addSceneTrigger(11, 20, 'apartment-interior', 'door_right');
 		
 		        // Add chess scene triggers at tiles 16,7 and 17,7
-        this.triggerManager.addSceneTrigger(16, 7, 'ChessScene', 'chess_left');
-        this.triggerManager.addSceneTrigger(17, 7, 'ChessScene', 'chess_right');
+		this.triggerManager.addSceneTrigger(16, 7, 'ChessScene', 'chess_left');
+		this.triggerManager.addSceneTrigger(17, 7, 'ChessScene', 'chess_right');
 
         // Setup player trigger collision
 		this.triggerManager.setupPlayerTriggers(this.player);

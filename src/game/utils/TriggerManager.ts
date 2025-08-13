@@ -93,6 +93,16 @@ export class TriggerManager {
         switch (triggerData.type) {
             case 'scene':
                 console.log(`🚪 Scene transition triggered: ${triggerData.targetScene}`);
+                // Intercept ChessScene to show confirmation dialogue first, but only in ChinatownExterior
+                if (triggerData.targetScene === 'ChessScene' && this.scene.scene.key === 'chinatown-exterior') {
+                    const dlg = (this.scene as any).dialogue as import('../ui/DialoguePanel').default | undefined;
+                    if (dlg && typeof dlg.confirm === 'function') {
+                        dlg.confirm('Play chess?', 'Yes', 'No').then((accept: boolean) => {
+                            if (accept) this.scene.scene.start('ChessScene');
+                        });
+                        return;
+                    }
+                }
                 this.scene.scene.start(triggerData.targetScene);
                 break;
             

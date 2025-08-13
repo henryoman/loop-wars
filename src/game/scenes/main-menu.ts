@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import MoneyText from "../ui/MoneyText";
 
 export default class MainMenu extends Phaser.Scene {
 
@@ -24,5 +25,8 @@ export default class MainMenu extends Phaser.Scene {
             console.log('Space key pressed - starting chinatown-exterior scene');
             this.scene.start('chinatown-exterior');
         });
+
+        // Tiny money label (viewport-fixed) on menu too
+        new MoneyText(this);
     }
 }
