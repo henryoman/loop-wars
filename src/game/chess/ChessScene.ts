@@ -11,8 +11,9 @@ export default class ChessScene extends Phaser.Scene {
   private sprites: (Phaser.GameObjects.Sprite | null)[][] = [];
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private keyA!: Phaser.Input.Keyboard.Key; // Z key acts as A-button
-  private keyB!: Phaser.Input.Keyboard.Key; // X key acts as B-button
+  private wasd!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private keyA!: Phaser.Input.Keyboard.Key[]; // J/Z as A-button
+  private keyB!: Phaser.Input.Keyboard.Key[]; // K/X as B-button
   private debounce = 0;
 
   create(): void {
@@ -24,10 +25,22 @@ export default class ChessScene extends Phaser.Scene {
     this.cursor = new Cursor(this, this.boardOrigin.x, this.boardOrigin.y);
     this.initSprites();
 
-    // Keyboard input
+    // Keyboard input (arrows + WASD; A-button = J/Z, B-button = K/X)
     this.cursors = this.input.keyboard!.createCursorKeys();
-    this.keyA = this.input.keyboard!.addKey('Z');
-    this.keyB = this.input.keyboard!.addKey('X');
+    this.wasd = this.input.keyboard!.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as Phaser.Types.Input.Keyboard.CursorKeys;
+    this.keyA = [
+      this.input.keyboard!.addKey('J'),
+      this.input.keyboard!.addKey('Z'),
+    ];
+    this.keyB = [
+      this.input.keyboard!.addKey('K'),
+      this.input.keyboard!.addKey('X'),
+    ];
 
     // Mouse/touch input
     this.input.on('pointerdown', this.handlePointer, this);
@@ -48,16 +61,16 @@ export default class ChessScene extends Phaser.Scene {
   }
 
   update(time: number): void {
-    // Arrow-key movement debounce (150 ms)
+    // Arrow/WASD movement debounce (150 ms)
     if (time > this.debounce) {
-      if (this.cursors.left!.isDown) { this.cursor.move(-1, 0); this.debounce = time + 150; }
-      if (this.cursors.right!.isDown) { this.cursor.move(1, 0);  this.debounce = time + 150; }
-      if (this.cursors.up!.isDown) { this.cursor.move(0, 1);   this.debounce = time + 150; }
-      if (this.cursors.down!.isDown) { this.cursor.move(0, -1);  this.debounce = time + 150; }
+      if ((this.cursors.left!.isDown) || (this.wasd.left!.isDown)) { this.cursor.move(-1, 0); this.debounce = time + 150; }
+      if ((this.cursors.right!.isDown) || (this.wasd.right!.isDown)) { this.cursor.move(1, 0);  this.debounce = time + 150; }
+      if ((this.cursors.up!.isDown) || (this.wasd.up!.isDown)) { this.cursor.move(0, 1);   this.debounce = time + 150; }
+      if ((this.cursors.down!.isDown) || (this.wasd.down!.isDown)) { this.cursor.move(0, -1);  this.debounce = time + 150; }
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.keyA)) this.handleA();
-    if (Phaser.Input.Keyboard.JustDown(this.keyB)) this.clearSelection();
+    if (this.keyA.some(k => Phaser.Input.Keyboard.JustDown(k))) this.handleA();
+    if (this.keyB.some(k => Phaser.Input.Keyboard.JustDown(k))) this.clearSelection();
   }
 
   // ───────────────────────── selection logic ─────────────────────────
