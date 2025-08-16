@@ -26,7 +26,6 @@ export default class MainMenu extends Phaser.Scene {
             this.scene.start('chinatown-exterior');
         });
 
-        // Tiny money label (viewport-fixed) on menu too
-        new MoneyText(this);
+        // Money UI should not appear on the start screen
     }
 }

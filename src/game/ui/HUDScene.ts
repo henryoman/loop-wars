@@ -12,7 +12,7 @@ export default class HUDScene extends Phaser.Scene {
     // Simple money display at top-right (camera-fixed)
     const pad = 2;
     this.moneyText = this.add.text(384 - pad, pad, this.formatMoney(GameState.moneyCents), {
-      fontFamily: 'monospace',
+      fontFamily: 'Area51 Serif',
       fontSize: '8px',
       color: '#ffffff',
       align: 'right'

@@ -12,7 +12,7 @@ export default class MoneyText {
     const width = scene.cameras.main.width;
 
     this.text = scene.add.text(width - pad, pad, this.format(GameState.moneyCents), {
-      fontFamily: 'monospace',
+      fontFamily: 'Area51 Serif',
       fontSize: '8px',
       color: '#ffffff',
       align: 'right'

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ActionButton, NavAction, onAction, offAction } from '../input/Keymap';
 
 /**
  * Simple dialogue/announcement panel that slides from the bottom.
@@ -11,6 +12,7 @@ export default class DialoguePanel {
     private text: Phaser.GameObjects.Text;
     private optionTexts: Phaser.GameObjects.Text[] = [];
     private resolveSelection?: (accepted: boolean) => void;
+    private active = false;
     private readonly PANEL_HEIGHT = 96;
 
     constructor(scene: Phaser.Scene) {
@@ -29,6 +31,7 @@ export default class DialoguePanel {
 
         // Text area with small padding and word wrap
         this.text = scene.add.text(8, 8, '', {
+            fontFamily: 'Area51 Serif',
             fontSize: '12px',
             color: '#ffffff',
             wordWrap: { width: width - 16 }
@@ -44,6 +47,7 @@ export default class DialoguePanel {
      */
     show(message: string): void {
         this.text.setText(message);
+        this.active = true;
         this.scene.tweens.add({
             targets: this.container,
             y: this.scene.cameras.main.height - this.PANEL_HEIGHT,
@@ -60,7 +64,10 @@ export default class DialoguePanel {
             targets: this.container,
             y: this.scene.cameras.main.height,
             duration: 300,
-            ease: 'Power2'
+            ease: 'Power2',
+            onComplete: () => {
+                this.active = false;
+            }
         });
     }
 
@@ -70,39 +77,58 @@ export default class DialoguePanel {
         this.show(message);
 
         const { width } = this.scene.cameras.main;
-        const baseY = this.scene.cameras.main.height - this.PANEL_HEIGHT + 56;
+        // Place choices within the panel (local to container)
+        const baseY = 56; // 56px from top of the panel height (96)
 
-        const yes = this.scene.add.text(width - 96, baseY, yesLabel, { fontSize: '12px', color: '#00ffcc' }).setOrigin(0, 0);
-        const no  = this.scene.add.text(width - 48, baseY, noLabel, { fontSize: '12px', color: '#ff6666' }).setOrigin(0, 0);
+        const px = Math.round.bind(Math);
+        const yes = this.scene.add.text(px(width - 112), px(baseY), yesLabel, { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#00ffcc' }).setOrigin(0, 0);
+        const no  = this.scene.add.text(px(width - 56), px(baseY), noLabel, { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#ff6666' }).setOrigin(0, 0);
+        const selector = this.scene.add.text(0, px(baseY), '▶', { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#ffffff' }).setOrigin(0, 0);
         yes.setScrollFactor(0);
         no.setScrollFactor(0);
-        this.optionTexts.push(yes, no);
-        this.container.add([yes, no]);
+        selector.setScrollFactor(0);
+        this.optionTexts.push(yes, no, selector);
+        this.container.add([yes, no, selector]);
 
         return new Promise<boolean>((resolve) => {
             this.resolveSelection = resolve;
 
-            const k = this.scene.input.keyboard!;
-            const acceptKeys = [k.addKey('J'), k.addKey('Z'), k.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)];
-            const cancelKeys = [k.addKey('K'), k.addKey('X'), k.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)];
+            let selectedIndex = 0; // 0 = yes, 1 = no
 
-            const onDown = (e: KeyboardEvent) => {
-                if (acceptKeys.some(key => Phaser.Input.Keyboard.JustDown(key))) done(true);
-                if (cancelKeys.some(key => Phaser.Input.Keyboard.JustDown(key))) done(false);
+            const updateSelectionVisuals = () => {
+                selector.x = px(selectedIndex === 0 ? yes.x - 12 : no.x - 12);
+                yes.setStyle({ fontStyle: selectedIndex === 0 ? 'bold' : 'normal' });
+                no.setStyle({ fontStyle: selectedIndex === 1 ? 'bold' : 'normal' });
             };
+            updateSelectionVisuals();
+
+            const onLeft = () => { selectedIndex = 0; updateSelectionVisuals(); };
+            const onRight = () => { selectedIndex = 1; updateSelectionVisuals(); };
+
+            const onAccept = () => done(selectedIndex === 0);
+            const onCancel = () => done(false);
 
             const done = (accepted: boolean) => {
-                acceptKeys.forEach(key => key.destroy());
-                cancelKeys.forEach(key => key.destroy());
+                offAction(this.scene, NavAction.LEFT, onLeft);
+                offAction(this.scene, NavAction.RIGHT, onRight);
+                offAction(this.scene, ActionButton.A, onAccept);
+                offAction(this.scene, ActionButton.B, onCancel);
                 this.clearOptions();
                 this.hide();
                 resolve(accepted);
                 this.resolveSelection = undefined;
-                this.scene.input.keyboard!.off('keydown', onDown);
             };
 
-            this.scene.input.keyboard!.on('keydown', onDown);
+            onAction(this.scene, NavAction.LEFT, onLeft);
+            onAction(this.scene, NavAction.RIGHT, onRight);
+            onAction(this.scene, ActionButton.A, onAccept);
+            onAction(this.scene, ActionButton.B, onCancel);
         });
+    }
+
+    /** True when the dialogue panel is visible / awaiting input */
+    isActive(): boolean {
+        return this.active;
     }
 
     private clearOptions(): void {

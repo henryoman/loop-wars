@@ -47,7 +47,7 @@ export default class Preloader extends Phaser.Scene {
         this.load.spritesheet('chessPieces', 'assets/images/chess/chess-pieces.png', { frameWidth: 32, frameHeight: 32 });
     }
 
-    create ()
+    async create ()
     {
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, you can define global animations here, so we can use them in other scenes.
@@ -91,6 +91,20 @@ export default class Preloader extends Phaser.Scene {
             frameRate: 8,
             repeat: -1
         });
+
+        // Ensure custom webfont is loaded before showing menu/UI to avoid FOUT
+        try {
+            const fontsAny = (document as any).fonts;
+            if (fontsAny && typeof fontsAny.load === 'function') {
+                await Promise.all([
+                    fontsAny.load("12px 'Area51 Serif'"),
+                    fontsAny.load("8px 'Area51 Serif'")
+                ]);
+                if (typeof fontsAny.ready?.then === 'function') {
+                    await fontsAny.ready;
+                }
+            }
+        } catch {}
 
         // Then move to the MainMenu (HUD intentionally not launched)
         this.scene.start('MainMenu');

@@ -127,8 +127,12 @@ export default class ChinatownExterior extends Phaser.Scene {
 			right: this.cursors.right.isDown
 		};
 
-		// Update player via controller
-		this.playerController.update(input);
+		// Prevent movement when dialogue is active
+		if ((this as any)._inputPaused || (this.dialogue && this.dialogue.isActive())) {
+			this.playerController.update({ up: false, down: false, left: false, right: false });
+		} else {
+			this.playerController.update(input);
+		}
 
 		// Debug log when moving (maintain existing debug behavior)
                 const playerState = this.playerController.getState();
