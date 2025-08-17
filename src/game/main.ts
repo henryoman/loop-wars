@@ -3,6 +3,7 @@ import Boot from './scenes/boot';
 import ChinatownExterior from './scenes/chinatown-exterior';
 import ChessScene from './chess/ChessScene';
 import MainMenu from './scenes/main-menu';
+import IntroCutscene from './scenes/intro-cutscene';
 import PaccHouse from './scenes/pacc-house-interior';
 import Phaser from 'phaser';
 import Preloader from './scenes/preloader';
@@ -29,6 +30,7 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [
         Boot,
         Preloader,
+        IntroCutscene,
         MainMenu,
         ChessScene,
         ApartmentInterior,

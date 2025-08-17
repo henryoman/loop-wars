@@ -45,6 +45,11 @@ export default class Preloader extends Phaser.Scene {
         // ────── Chess assets ──────
         this.load.image('chessBoard', 'assets/images/chess/board.png');
         this.load.spritesheet('chessPieces', 'assets/images/chess/chess-pieces.png', { frameWidth: 32, frameHeight: 32 });
+
+		// ────── Intro cutscene (Aseprite sheet + JSON) ──────
+		// Uses Aseprite export at public/assets/images/cutscenes
+		this.load.atlas('lacutscene2', 'assets/images/cutscenes/lacutscene2.png', 'assets/images/cutscenes/lacutscene2.json');
+		this.load.json('lacutscene2Data', 'assets/images/cutscenes/lacutscene2.json');
     }
 
     async create ()
@@ -106,7 +111,18 @@ export default class Preloader extends Phaser.Scene {
             }
         } catch {}
 
-        // Then move to the MainMenu (HUD intentionally not launched)
-        this.scene.start('MainMenu');
+		// Build animation from the atlas frames with per-frame durations from JSON
+		const json = this.cache.json.get('lacutscene2Data');
+		if (json && json.frames) {
+			const frameKeys = Object.keys(json.frames);
+			const frames: Phaser.Types.Animations.AnimationFrame[] = frameKeys.map((key: string) => {
+				const f = json.frames[key];
+				return { key: 'lacutscene2', frame: key, duration: f.duration ?? 100 } as Phaser.Types.Animations.AnimationFrame;
+			});
+			this.anims.create({ key: 'intro-lacutscene2', frames, repeat: 0 });
+		}
+
+		// Proceed to the intro cutscene scene
+		this.scene.start('IntroCutscene');
     }
 }

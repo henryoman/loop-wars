@@ -29,9 +29,12 @@ export default class HUDScene extends Phaser.Scene {
     });
 
     // Always render HUD above any newly started scene
-    this.scene.manager.events.on(Phaser.Scenes.Events.START, (scene: Phaser.Scene) => {
-      if (scene !== this) this.scene.bringToTop();
-    });
+    const sceneManager: any = this.game.scene as any;
+    if (sceneManager && sceneManager.events) {
+      sceneManager.events.on(Phaser.Scenes.Events.START, (scene: Phaser.Scene) => {
+        if (scene !== this) this.scene.bringToTop();
+      });
+    }
 
     // Bring HUD on top now as well
     this.scene.bringToTop();

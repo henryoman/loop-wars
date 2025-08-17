@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Chess } from 'chess.js';
-import type { Move } from 'chess.js';
+import type { Move, Square } from 'chess.js';
 import Cursor from './cursor';
 import { GameState } from '../state/GameState';
 import MoneyText from '../ui/MoneyText';
@@ -84,12 +84,12 @@ export default class ChessScene extends Phaser.Scene {
   }
 
   // ───────────────────────── selection logic ─────────────────────────
-  private selected: string | null = null;
-  private legalTargets: Set<string> = new Set();
+  private selected: Square | null = null;
+  private legalTargets: Set<Square> = new Set();
 
   private handleA(): void {
     if (this.inputLocked) return;
-    const sq = this.cursor.algebraic();
+    const sq = this.cursor.algebraic() as Square;
     console.log('[CHESS] A pressed on', sq);
     this.handleSquare(sq);
   }
@@ -102,10 +102,10 @@ export default class ChessScene extends Phaser.Scene {
     const { file, rank } = this.algToCoords(sq);
     this.cursor.file = file;
     this.cursor.rank = rank;
-    this.handleSquare(sq);
+    this.handleSquare(sq as Square);
   }
 
-  private handleSquare(sq: string): void {
+  private handleSquare(sq: Square): void {
     if (!this.selected) {
       // No source selected yet → try selecting own piece
       const piece = this.chess.get(sq);
@@ -113,7 +113,7 @@ export default class ChessScene extends Phaser.Scene {
       if (piece && piece.color === this.chess.turn()) {
         this.selected = sq;
         const moves = this.chess.moves({ square: sq, verbose: true }) as Move[];
-        this.legalTargets = new Set(moves.map(m => m.to));
+        this.legalTargets = new Set(moves.map(m => m.to as Square));
         console.log('[CHESS] Legal targets from', sq, '→', Array.from(this.legalTargets));
         // Tint the selected source sprite
         const { file, rank } = this.algToCoords(sq);
@@ -126,7 +126,7 @@ export default class ChessScene extends Phaser.Scene {
 
     // We already have a source; attempt to move
     if (this.legalTargets.has(sq)) {
-      const move = this.chess.move({ from: this.selected, to: sq }) as Move;
+      const move = this.chess.move({ from: this.selected as Square, to: sq }) as Move;
       console.log('[CHESS] Move success', move);
       this.animateMove(move);
       // Schedule simple AI reply after animation
@@ -186,11 +186,11 @@ export default class ChessScene extends Phaser.Scene {
   }
 
   private finishGame(): void {
-    const result = this.chess.inCheckmate()
+    const result = this.chess.isCheckmate()
       ? `${this.chess.turn() === 'w' ? 'Black' : 'White'} wins`
       : 'Draw';
     this.events.emit('chess-done', result);
-    const winner = this.chess.inCheckmate()
+    const winner = this.chess.isCheckmate()
       ? this.chess.turn() === 'w' ? 'black' : 'white'
       : null;
     this.game.events.emit('chess-result', { result, winner });
