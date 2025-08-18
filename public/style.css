@@ -7,6 +7,16 @@
     font-display: swap;
 }
 
+/* Alias family so we can switch without touching font files */
+@font-face {
+    font-family: 'Area51 Pixel';
+    src: url('/assets/fonts/area51-serif.woff2') format('woff2'),
+         url('/assets/fonts/area51-serif.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -21,4 +31,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Ensure CSS zooming of the canvas is nearest-neighbor for pixel art */
+canvas {
+    image-rendering: pixelated;
 }

@@ -50,6 +50,9 @@ export default class Preloader extends Phaser.Scene {
 		// Uses Aseprite export at public/assets/images/cutscenes
 		this.load.atlas('lacutscene2', 'assets/images/cutscenes/lacutscene2.png', 'assets/images/cutscenes/lacutscene2.json');
 		this.load.json('lacutscene2Data', 'assets/images/cutscenes/lacutscene2.json');
+
+		// ────── Splash image ──────
+		this.load.image('westsidelabs', 'assets/images/cutscenes/westsidelabs.png');
     }
 
     async create ()
@@ -122,7 +125,7 @@ export default class Preloader extends Phaser.Scene {
 			this.anims.create({ key: 'intro-lacutscene2', frames, repeat: 0 });
 		}
 
-		// Proceed to the intro cutscene scene
-		this.scene.start('IntroCutscene');
+		// Proceed to splash screen first
+		this.scene.start('Splash');
     }
 }

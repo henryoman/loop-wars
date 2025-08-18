@@ -5,6 +5,7 @@ import { CollisionLoader } from '../utils/CollisionLoader';
 import { TriggerManager } from '../utils/TriggerManager';
 import DialoguePanel from '../ui/DialoguePanel';
 import MoneyText from '../ui/MoneyText';
+import { getMovementInput } from '../input/Keymap';
 
 export default class ChinatownExterior extends Phaser.Scene {
 
@@ -13,7 +14,7 @@ export default class ChinatownExterior extends Phaser.Scene {
 	}
 
 	private player!: Phaser.Physics.Arcade.Sprite;
-	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys; // legacy
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 	private playerController!: PlayerController;
 	private collisionLoader!: CollisionLoader;
@@ -51,8 +52,7 @@ export default class ChinatownExterior extends Phaser.Scene {
 		this.player.setOffset(11, 20); // Offset 11 pixels from left to center, 20 from top for bottom 12 pixels
 		this.player.setCollideWorldBounds(true);
 
-		// Set up input
-		this.cursors = this.input.keyboard!.createCursorKeys();
+		// Input centralized via Keymap
 
 		// Set world bounds for physics and camera to match actual map size
 		this.physics.world.setBounds(0, 0, 720, 480);
@@ -74,6 +74,8 @@ export default class ChinatownExterior extends Phaser.Scene {
 
         // Dialogue system (bottom third panel)
         this.dialogue = new DialoguePanel(this);
+        // Bring dialogue above everything else
+        this.children.bringToTop((this.dialogue as any).container ?? this.add.container());
         // Tiny money label (viewport-fixed)
         this.moneyText = new MoneyText(this);
 
@@ -119,13 +121,8 @@ export default class ChinatownExterior extends Phaser.Scene {
 	}
 
         update() {
-		// Create input object from cursors
-		const input: IPlayerMovementInput = {
-			up: this.cursors.up.isDown,
-			down: this.cursors.down.isDown,
-			left: this.cursors.left.isDown,
-			right: this.cursors.right.isDown
-		};
+		// Create input object from centralized keymap
+		const input = getMovementInput(this);
 
 		// Prevent movement when dialogue is active
 		if ((this as any)._inputPaused || (this.dialogue && this.dialogue.isActive())) {

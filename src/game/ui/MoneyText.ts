@@ -12,11 +12,15 @@ export default class MoneyText {
     const width = scene.cameras.main.width;
 
     this.text = scene.add.text(width - pad, pad, this.format(GameState.moneyCents), {
-      fontFamily: 'Area51 Serif',
+      fontFamily: 'Area51 Pixel',
       fontSize: '8px',
       color: '#ffffff',
       align: 'right'
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
+
+    // Keep UI text crisp: cancel out scene camera zoom
+    const uiScale = 1 / scene.cameras.main.zoom;
+    this.text.setScale(uiScale);
 
     GameState.events.on('money:changed', this.onMoneyChanged, this);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -30,7 +34,7 @@ export default class MoneyText {
 
   private format(cents: number): string {
     const dollars = Math.floor(cents / 100);
-    return `$${dollars.toLocaleString('en-US', { minimumIntegerDigits: 2 })}`;
+    return `$${dollars.toLocaleString('en-US', { minimumIntegerDigits: 5 })}`;
   }
 }
 

@@ -22,11 +22,11 @@ export default class IntroCutscene extends Phaser.Scene {
 		// Play the prebuilt animation created in the Preloader
 		sprite.play('intro-lacutscene2');
 
-		// When the animation completes, fade to black and go to main menu
+		// When the animation completes, fade to black and go to the game world
 		sprite.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
 			this.cameras.main.fadeOut(500, 0, 0, 0);
 			this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-				this.scene.start('MainMenu');
+				this.scene.start('chinatown-exterior');
 			});
 		});
 	}

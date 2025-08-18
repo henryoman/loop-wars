@@ -21,25 +21,32 @@ export default class DialoguePanel {
 
         // Container positioned off-screen at bottom
         this.container = scene.add.container(0, height);
-        this.container.setDepth(1000); // Ensure it's above game elements
+        this.container.setDepth(10000); // Ensure it's above game elements
         this.container.setScrollFactor(0);
 
         // Black background covering full width
         const background = scene.add.rectangle(0, 0, width, this.PANEL_HEIGHT, 0x000000, 1);
         background.setOrigin(0, 0);
         background.setScrollFactor(0);
+        background.setDepth(10001);
 
         // Text area with small padding and word wrap
         this.text = scene.add.text(8, 8, '', {
-            fontFamily: 'Area51 Serif',
+            fontFamily: 'Area51 Pixel',
             fontSize: '12px',
             color: '#ffffff',
             wordWrap: { width: width - 16 }
         });
         this.text.setScrollFactor(0);
+        this.text.setScale(1 / scene.cameras.main.zoom);
+        this.text.setResolution((window as any).devicePixelRatio || 1);
+        this.text.setDepth(10002);
 
         // Add to container
         this.container.add([background, this.text]);
+        // Ensure local coordinates within the sliding container
+        background.setY(0);
+        this.text.setY(8);
     }
 
     /**
@@ -81,14 +88,33 @@ export default class DialoguePanel {
         const baseY = 56; // 56px from top of the panel height (96)
 
         const px = Math.round.bind(Math);
-        const yes = this.scene.add.text(px(width - 112), px(baseY), yesLabel, { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#00ffcc' }).setOrigin(0, 0);
-        const no  = this.scene.add.text(px(width - 56), px(baseY), noLabel, { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#ff6666' }).setOrigin(0, 0);
-        const selector = this.scene.add.text(0, px(baseY), '▶', { fontFamily: 'Area51 Serif', fontSize: '12px', color: '#ffffff' }).setOrigin(0, 0);
+        const yes = this.scene.add.text(px(width - 112), px(baseY), yesLabel, { fontFamily: 'Area51 Pixel', fontSize: '12px', color: '#00ffd0' }).setOrigin(0, 0);
+        const no  = this.scene.add.text(px(width - 56), px(baseY), noLabel, { fontFamily: 'Area51 Pixel', fontSize: '12px', color: '#ff6666' }).setOrigin(0, 0);
+        const selector = this.scene.add.text(0, px(baseY), '▶', { fontFamily: 'Area51 Pixel', fontSize: '12px', color: '#ffffff' }).setOrigin(0, 0);
+        const uiScale = 1 / this.scene.cameras.main.zoom;
+        yes.setScale(uiScale);
+        no.setScale(uiScale);
+        selector.setScale(uiScale);
+        const dpr = (window as any).devicePixelRatio || 1;
+        yes.setResolution(dpr);
+        no.setResolution(dpr);
+        selector.setResolution(dpr);
         yes.setScrollFactor(0);
         no.setScrollFactor(0);
         selector.setScrollFactor(0);
+        yes.setDepth(10002);
+        no.setDepth(10002);
+        selector.setDepth(10002);
         this.optionTexts.push(yes, no, selector);
         this.container.add([yes, no, selector]);
+        // Reposition to be relative to the container (local coords)
+        yes.setPosition(px(width - 112), px(baseY));
+        no.setPosition(px(width - 56), px(baseY));
+        selector.setY(px(baseY));
+        // Snap to integers to avoid sub-pixel blur
+        yes.x = Math.round(yes.x); yes.y = Math.round(yes.y);
+        no.x = Math.round(no.x); no.y = Math.round(no.y);
+        selector.x = Math.round(selector.x); selector.y = Math.round(selector.y);
 
         return new Promise<boolean>((resolve) => {
             this.resolveSelection = resolve;
@@ -123,6 +149,14 @@ export default class DialoguePanel {
             onAction(this.scene, NavAction.RIGHT, onRight);
             onAction(this.scene, ActionButton.A, onAccept);
             onAction(this.scene, ActionButton.B, onCancel);
+
+            // Pointer interactions for mouse/touch
+            yes.setInteractive({ useHandCursor: true })
+                .on('pointerover', () => { selectedIndex = 0; updateSelectionVisuals(); })
+                .on('pointerdown', () => onAccept());
+            no.setInteractive({ useHandCursor: true })
+                .on('pointerover', () => { selectedIndex = 1; updateSelectionVisuals(); })
+                .on('pointerdown', () => onCancel());
         });
     }
 

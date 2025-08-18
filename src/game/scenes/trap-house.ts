@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { PlayerController } from '../player/PlayerController';
+import { getMovementInput } from '../input/Keymap';
 import { IPlayerMovementInput } from '../player/types/PlayerTypes';
 
 export default class TrapHouse extends Phaser.Scene {
@@ -9,7 +10,7 @@ export default class TrapHouse extends Phaser.Scene {
 	}
 
 	private player!: Phaser.Physics.Arcade.Sprite;
-	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+	private cursors!: Phaser.Types.Input.Keyboard.CursorKeys; // legacy
 	private collisionGroup!: Phaser.Physics.Arcade.StaticGroup;
 	private playerController!: PlayerController;
 
@@ -26,8 +27,7 @@ export default class TrapHouse extends Phaser.Scene {
 		this.player.setOffset(10, 20); // Offset 10 pixels from left to center, 20 from top for bottom 12 pixels
 		this.player.setCollideWorldBounds(true);
 
-		// Set up input
-		this.cursors = this.input.keyboard!.createCursorKeys();
+		// Input centralized via Keymap
 
 		// Set world bounds for physics and camera
 		this.physics.world.setBounds(0, 0, 384, 288);
@@ -80,13 +80,8 @@ export default class TrapHouse extends Phaser.Scene {
 	}
 
 	update() {
-		// Create input object from cursors
-		const input: IPlayerMovementInput = {
-			up: this.cursors.up.isDown,
-			down: this.cursors.down.isDown,
-			left: this.cursors.left.isDown,
-			right: this.cursors.right.isDown
-		};
+		// Create input object from centralized keymap
+		const input = getMovementInput(this);
 
 		// Update player via controller
 		this.playerController.update(input);

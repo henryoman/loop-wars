@@ -12,11 +12,14 @@ export default class HUDScene extends Phaser.Scene {
     // Simple money display at top-right (camera-fixed)
     const pad = 2;
     this.moneyText = this.add.text(384 - pad, pad, this.formatMoney(GameState.moneyCents), {
-      fontFamily: 'Area51 Serif',
+      fontFamily: 'Area51 Pixel',
       fontSize: '8px',
       color: '#ffffff',
       align: 'right'
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
+
+    // Keep HUD crisp with camera zoom
+    this.moneyText.setScale(1 / this.cameras.main.zoom);
 
     // Ensure camera follow in game scenes doesn't affect HUD
     this.cameras.main.setScroll(0, 0);
@@ -46,7 +49,7 @@ export default class HUDScene extends Phaser.Scene {
 
   private formatMoney(cents: number): string {
     const dollars = Math.floor(cents / 100);
-    return `$${dollars.toLocaleString('en-US', { minimumIntegerDigits: 2 })}`;
+    return `$${dollars.toLocaleString('en-US', { minimumIntegerDigits: 5 })}`;
   }
 }
 
